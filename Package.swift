@@ -12,19 +12,16 @@ let package = Package(
             targets: ["JsonRPC"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/tesseract-one/WebSocket.swift.git", from: "0.1.0"),
-        .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.3")
+        .package(name: "WebSocket", url: "https://github.com/tesseract-one/WebSocket.swift.git", from: "0.1.0"),
+        .package(name: "Serializable", url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.3")
     ],
     targets: [
         .target(
             name: "JsonRPC",
-            dependencies: [
-                .product(name: "WebSocket", package: "WebSocket.swift")],
+            dependencies: ["WebSocket"],
             path: "Sources"),
         .testTarget(
             name: "JsonRPCTests",
-            dependencies: [
-                "JsonRPC",
-                .product(name: "Serializable", package: "Serializable.swift")]),
+            dependencies: ["JsonRPC", "Serializable"]),
     ]
 )
