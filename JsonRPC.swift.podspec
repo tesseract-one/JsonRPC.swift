@@ -29,6 +29,6 @@ Pod::Spec.new do |s|
   s.test_spec 'Tests' do |test_spec|
     test_spec.platforms = {:ios => '9.0', :osx => '10.10', :tvos => '9.0'}
     test_spec.source_files = 'Tests/JsonRPCTests/*.swift'
-    test_scpec.dependency 'Serializable.swift', '~> 0.2.3'
+    test_spec.dependency 'Serializable.swift', '~> 0.2.3'
   end
 end
