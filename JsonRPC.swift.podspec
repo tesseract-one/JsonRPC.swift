@@ -22,7 +22,7 @@ Pod::Spec.new do |s|
 
   s.module_name = 'JsonRPC'
   
-  s.dependency 'WebSocket.swift', '~> 0.1.0'
+  s.dependency 'TesseractWebSocket', '~> 0.1.0'
 
   s.source_files = 'Sources/*.swift'
  
