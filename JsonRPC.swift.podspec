@@ -1,10 +1,10 @@
 Pod::Spec.new do |s|
   s.name             = 'JsonRPC.swift'
   s.version          = '0.0.1'
-  s.summary          = 'Bech32, Bech32m and SegWit library for Swift.'
+  s.summary          = 'Cross-plaform Json RPC library for Swift with WebSocket support'
 
   s.description      = <<-DESC
-  Bech32, Bech32m and SegWit implementation for Swift. Supports all Apple platforms and Linux.
+  Cross-plaform Json RPC library for Swift with WebSocket support. Supports all Apple platforms and Linux.
                        DESC
 
   s.homepage         = 'https://github.com/tesseract-one/JsonRPC.swift'
