@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
   
   s.dependency 'TesseractWebSocket', '~> 0.1.0'
 
-  s.source_files = 'Sources/*.swift'
+  s.source_files = 'Sources/**/*.swift'
  
   s.test_spec 'Tests' do |test_spec|
     test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
