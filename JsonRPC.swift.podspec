@@ -18,11 +18,11 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = '10.0'
   s.watchos.deployment_target = '6.0'
   
-  s.swift_versions = ['5']
+  s.swift_version = '5.4'
 
   s.module_name = 'JsonRPC'
   
-  s.dependency 'TesseractWebSocket', '~> 0.1.0'
+  s.dependency 'TesseractWebSocket', '~> 0.2.0'
 
   s.source_files = 'Sources/**/*.swift'
  
