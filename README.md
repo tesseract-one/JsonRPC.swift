@@ -20,8 +20,8 @@ Add the following dependency to your [Package.swift](https://github.com/apple/sw
 
 ```swift
 .package(url: "https://github.com/tesseract-one/JsonRPC.swift.git", from: "0.1.0")
-# you can enable Serializable support for dynamic error parsing (add dependency to your target too)
-# .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0")
+// you can enable Serializable support for dynamic error parsing (add dependency to your target too)
+// .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0")
 ```
 
 Run `swift build` and build your app.
