@@ -42,9 +42,6 @@ Then run `pod install`
 import Foundation
 import JsonRPC
 
-// Allow simple string errors
-extension String : Error {}
-
 let rpc = JsonRpc(.http(url: URL(string: "https://api.avax-test.network/ext/bc/C/rpc")!), queue: .main)
 
 rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
@@ -57,9 +54,6 @@ rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.sel
 ```swift
 import Foundation
 import JsonRPC
-
-// Allow simple string errors
-extension String : Error {}
 
 let rpc = JsonRpc(.ws(url: URL(string: "wss://api.avax-test.network/ext/bc/C/ws")!), queue: .main)
 
@@ -76,9 +70,6 @@ import JsonRPC
 // This will allow dynamic JSON parsing 
 // https://github.com/tesseract-one/Serializable.swift
 import Serializable
-
-// Allow simple string errors
-extension String : Error {}
 
 // Notification body structure
 struct NewHeadsNotification: Decodable {
@@ -112,8 +103,10 @@ rpc.delegate = Delegate()
 // Connect to the server
 rpc.connect()
 
-// Call subsribe method. You can use Params() for array of Encodable parameters or provide own custom Encodable value.
-rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self, String.self) { res in
+// Call subsribe method.
+// You can use Params() for array of Encodable parameters or provide own custom Encodable value.
+// You can omit last parameter if you have Serializable dependency. This will set error data to SerializableValue type.
+rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self) { res in
     print(try! res.get())
 }
 ```
