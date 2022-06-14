@@ -100,13 +100,14 @@ class RPCTests: XCTestCase {
         var resHttp: String = "http"
         var resWs: String = "ws"
         
-        http.call(method: "web3_clientVersion", params: Nil.nil, String.self, String.self) { res in
+        http.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
             resHttp = try! res.get()
             
             httpExp.fulfill()
         }
         
-        ws.call(method: "web3_clientVersion", params: Nil.nil, String.self, String.self) { res in
+        
+        ws.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
             resWs = try! res.get()
             
             wsExp.fulfill()
@@ -175,7 +176,7 @@ class RPCTests: XCTestCase {
         var responses:Array<XCTestExpectation> = []
         
         for n in 0...times {
-            service.call(method: "web3_clientVersion", params: Nil.nil, String.self, String.self) { res in
+            service.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
                 responses[n].fulfill()
             }
         }

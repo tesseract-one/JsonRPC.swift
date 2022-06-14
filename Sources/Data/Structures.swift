@@ -90,37 +90,6 @@ public extension EnvelopeHeader {
     }
 }
 
-public enum Nil : Decodable, Encodable {
-    case `nil`
-}
-
-extension Nil {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        
-        if container.decodeNil() {
-            self = .nil
-        } else {
-            throw DecodingError.dataCorruptedError(
-                in: container,
-                debugDescription: "Must be nil"
-            )
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        
-        try container.encodeNil()
-    }
-}
-
-extension Nil: ExpressibleByNilLiteral {
-    public init(nilLiteral: ()) {
-        self = .nil
-    }
-}
-
 /*public struct EventEnvelope<M: Decodable>: Decodable {
     public let jsonrpc: String
     public let method: String
