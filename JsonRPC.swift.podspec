@@ -24,12 +24,15 @@ Pod::Spec.new do |s|
   
   s.subspec 'RPC' do |ss|
     ss.source_files = 'Sources/**/*.swift'
+    ss.exclude_files = 'Sources/Service/Serializable.swift'
     ss.dependency 'TesseractWebSocket', '~> 0.2.0'
   end
   
   s.subspec 'Serializable' do |ss|
     ss.dependency 'JsonRPC.swift/RPC'
     ss.dependency 'Serializable.swift', '~> 0.2.3'
+    
+    ss.source_files = 'Sources/Service/Serializable.swift'
     
     ss.test_spec 'Tests' do |test_spec|
         test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
