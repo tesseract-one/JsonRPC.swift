@@ -47,7 +47,7 @@ extension String : Error {}
 
 let rpc = JsonRpc(.http(url: URL(string: "https://api.avax-test.network/ext/bc/C/rpc")!), queue: .main)
 
-rpc.call(method: "web3_clientVersion", params: Nil.nil, String.self, String.self) { res in
+rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
   print(try! res.get())
 }
 ```
@@ -63,7 +63,7 @@ extension String : Error {}
 
 let rpc = JsonRpc(.ws(url: URL(string: "wss://api.avax-test.network/ext/bc/C/ws")!), queue: .main)
 
-rpc.call(method: "web3_clientVersion", params: Nil.nil, String.self, String.self) { res in
+rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
   print(try! res.get())
 }
 ```
@@ -112,8 +112,8 @@ rpc.delegate = Delegate()
 // Connect to the server
 rpc.connect()
 
-// Call subsribe method
-rpc.call(method: "eth_subscribe", params: ["newHeads"], String.self, String.self) { res in
+// Call subsribe method. You can use Params() for array of Encodable parameters or provide own custom Encodable value.
+rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self, String.self) { res in
     print(try! res.get())
 }
 ```
