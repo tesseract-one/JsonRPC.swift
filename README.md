@@ -30,6 +30,8 @@ Add the following to your [Podfile](http://guides.cocoapods.org/using/the-podfil
 
 ```rb
 pod 'JsonRPC.swift', '~> 0.1.0'
+# or you can enable SerializableValue support for simpler error handling
+# pod 'JsonRPC.swift/Serializable', '~> 0.1.0'
 ```
 
 Then run `pod install`

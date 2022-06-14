@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
   end
   
   s.subspec 'Serializable' do |ss|
-    ss.dependency 'JsonRPC/RPC'
+    ss.dependency 'JsonRPC.swift/RPC'
     ss.dependency 'Serializable.swift', '~> 0.2.3'
     
     ss.test_spec 'Tests' do |test_spec|
