@@ -51,6 +51,10 @@ let rpc = JsonRpc(.http(url: URL(string: "https://api.avax-test.network/ext/bc/C
 rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
   print(try! res.get())
 }
+
+# Or with async/await (Swift 5.5+)
+let res = await rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self)
+print(res)
 ```
 
 #### WebSocket connection
@@ -64,6 +68,10 @@ let rpc = JsonRpc(.ws(url: URL(string: "wss://api.avax-test.network/ext/bc/C/ws"
 rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self) { res in
   print(try! res.get())
 }
+
+# Or with async/await (Swift 5.5+)
+let res = await rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self)
+print(res)
 ```
 
 #### Notifications
@@ -113,6 +121,10 @@ rpc.connect()
 rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self) { res in
     print(try! res.get())
 }
+
+# Or with async/await (Swift 5.5+)
+let res = await rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self)
+print(res)
 ```
 
 ## Author
