@@ -127,3 +127,16 @@ public extension ServiceCore where Connection: PersistentConnection {
         }
     }
 }
+
+#if swift(>=5.5)
+@available(macOS 10.15, iOS 13, macCatalyst 13, tvOS 13, watchOS 6, *)
+extension Client {
+    public func call<Params: Encodable, Res: Decodable, Err: Decodable>(
+        method: String, params: Params, _ res: Res.Type, _ err: Err.Type
+    ) async throws -> Res {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params, res, err) { cont.resume(with: $0) }
+        }
+    }
+}
+#endif
