@@ -36,3 +36,14 @@ public protocol PersistentConnection {
     
     func send(data: Data)
 }
+
+#if swift(>=5.5)
+@available(macOS 10.15, iOS 13, macCatalyst 13, tvOS 13, watchOS 6, *)
+extension SingleShotConnection {
+    public func request(data: Data?) async throws -> Data? {
+        try await withUnsafeThrowingContinuation { cont in
+            self.request(data: data) { cont.resume(with: $0) }
+        }
+    }
+}
+#endif

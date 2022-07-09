@@ -53,8 +53,6 @@ public class HttpConnection: SingleShotConnection {
             }
         }.resume()
     }
-    
-    
 }
 
 ///Factory
@@ -76,3 +74,4 @@ extension ConnectionFactoryProvider where Factory == HttpConnectionFactory {
         Self(factory: HttpConnectionFactory(url: url, session: session, headers: headers))
     }
 }
+
