@@ -52,7 +52,7 @@ rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.sel
   print(try! res.get())
 }
 
-# Or with async/await (Swift 5.5+)
+// Or with async/await (Swift 5.5+)
 let res = await rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self)
 print(res)
 ```
@@ -69,7 +69,7 @@ rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.sel
   print(try! res.get())
 }
 
-# Or with async/await (Swift 5.5+)
+// Or with async/await (Swift 5.5+)
 let res = await rpc.call(method: "web3_clientVersion", params: Params(), String.self, String.self)
 print(res)
 ```
@@ -122,7 +122,7 @@ rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self) { res
     print(try! res.get())
 }
 
-# Or with async/await (Swift 5.5+)
+// Or with async/await (Swift 5.5+)
 let res = await rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self)
 print(res)
 ```
