@@ -5,9 +5,9 @@ jobs:
     runs-on: macOS-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_12.5.app
+        run: sudo xcode-select -s /Applications/Xcode_13.4.app
       - name: Build and Test SPM
         run: swift test
       - name: Update Cocoa Pods repo
@@ -21,6 +21,6 @@ jobs:
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build and Test
         run: swift test
