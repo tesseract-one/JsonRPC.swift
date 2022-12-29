@@ -13,14 +13,19 @@ import FoundationNetworking
 public class HttpConnection: SingleShotConnection {
     private let url: URL
     private let queue: DispatchQueue
-    private let headers: Dictionary<String, String>
+    private let headers: [(key: String, value: String)]
     private let session: URLSession
+    private let timeout: TimeInterval
     
-    public init(url: URL, queue: DispatchQueue, headers: Dictionary<String, String>, session: URLSession) {
+    public init(
+        url: URL, queue: DispatchQueue, headers: [(key: String, value: String)],
+        timeout: TimeInterval, session: URLSession
+    ) {
         self.url = url
         self.queue = queue
         self.headers = headers
         self.session = session
+        self.timeout = timeout
     }
     
     public func request(data: Data?, response: @escaping ConnectionCallback) -> Void {
@@ -28,6 +33,7 @@ public class HttpConnection: SingleShotConnection {
         
         req.httpMethod = "POST"
         req.httpBody = data
+        req.timeoutInterval = timeout
         
         for (k, v) in headers {
             req.addValue(v, forHTTPHeaderField: k)
@@ -62,16 +68,31 @@ public struct HttpConnectionFactory : SingleShotConnectionFactory {
     
     public let url: URL
     public let session: URLSession
-    public let headers: Dictionary<String, String>
+    public let headers: [(key: String, value: String)]
+    public let timeout: TimeInterval
     
     public func connection(queue: DispatchQueue, headers: Dictionary<String, String>) -> Connection {
-        HttpConnection(url: url, queue: queue, headers: headers.merging(self.headers) {$1}, session: session)
+        var mergedHeaders = self.headers
+        for (key, val) in headers {
+            if !mergedHeaders.contains(where: { $0.key == key }) {
+                mergedHeaders.append((key, val))
+            }
+        }
+        return HttpConnection(
+            url: url, queue: queue,
+            headers: mergedHeaders,
+            timeout: timeout, session: session
+        )
     }
 }
 
 extension ConnectionFactoryProvider where Factory == HttpConnectionFactory {
-    public static func http(url: URL, session: URLSession = URLSession.shared, headers: Dictionary<String, String> = [:]) -> Self {
-        Self(factory: HttpConnectionFactory(url: url, session: session, headers: headers))
+    public static func http(
+        url: URL, session: URLSession = .shared,
+        headers: [(key: String, value: String)] = [],
+        timeout: TimeInterval = 60.0
+    ) -> Self {
+        Self(factory: HttpConnectionFactory(url: url, session: session, headers: headers, timeout: timeout))
     }
 }
 

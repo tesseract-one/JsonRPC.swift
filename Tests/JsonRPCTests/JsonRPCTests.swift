@@ -9,6 +9,7 @@ import Foundation
 import Serializable
 import XCTest
 @testable import JsonRPC
+import WebSocket
 
 struct NewHeadsNotification: Decodable {
     let subscription: String
@@ -79,9 +80,8 @@ extension URL {
     static var avaHttp:URL {URL(string: "https://api.avax-test.network/ext/bc/C/rpc")!}
     static var avaWs:URL {URL(string: "wss://api.avax-test.network/ext/bc/C/ws")!}
     
-    //currently, there is not much happening on Ava C-chain, thus have to test notifications on Ethereum
-    static var ethHttp:URL {URL(string: "https://main-rpc.linkpool.io/")!}
-    static var ethWs:URL {URL(string: "wss://main-rpc.linkpool.io/ws")!}
+    //currently, there is not much happening on Ava Test C-chain, thus have to test notifications on MainNet
+    static var avaMainWs:URL {URL(string: "wss://api.avax.network/ext/bc/C/ws")!}
 }
 
 class RPCTests: XCTestCase {
@@ -126,7 +126,7 @@ class RPCTests: XCTestCase {
     }
     
     func testWsLong() {
-        var service: Client & Delegator & Connectable = JsonRpc(.ws(url: .ethWs, autoconnect: false, pool: pool), queue: queue)
+        var service: Client & Delegator & Connectable = JsonRpc(.ws(url: .avaMainWs, autoconnect: false, pool: pool), queue: queue)
         
         let delegate = TestDelegate(connected: self.expectation(description: "Connected"), notified: self.expectation(description: "Notified"))
         service.delegate = delegate
