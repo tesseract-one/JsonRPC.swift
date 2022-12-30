@@ -7,15 +7,20 @@
 
 import Foundation
 
-import NIOConcurrencyHelpers
-
 public typealias RPCID = UInt32
 
-private var _id_current = NIOAtomic.makeAtomic(value: UInt32(1))
+private let _id_current = Synced<RPCID>(value: 0)
 
 extension RPCID {
     static func next() -> RPCID {
-        _id_current.add(1)
+        _id_current.sync { value in
+            if (value == RPCID.max) {
+                value = 1
+            } else {
+                value += 1
+            }
+            return value
+        }
     }
 }
 

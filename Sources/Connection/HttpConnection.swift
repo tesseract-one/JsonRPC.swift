@@ -6,7 +6,7 @@
 //
 
 import Foundation
-#if os(Linux)
+#if os(Linux) || os(Windows)
 import FoundationNetworking
 #endif
 
@@ -81,7 +81,8 @@ public struct HttpConnectionFactory : SingleShotConnectionFactory {
         return HttpConnection(
             url: url, queue: queue,
             headers: mergedHeaders,
-            timeout: timeout, session: session
+            timeout: timeout,
+            session: session
         )
     }
 }
@@ -92,7 +93,10 @@ extension ConnectionFactoryProvider where Factory == HttpConnectionFactory {
         headers: [(key: String, value: String)] = [],
         timeout: TimeInterval = 60.0
     ) -> Self {
-        Self(factory: HttpConnectionFactory(url: url, session: session, headers: headers, timeout: timeout))
+        Self(factory: HttpConnectionFactory(url: url,
+                                            session: session,
+                                            headers: headers,
+                                            timeout: timeout))
     }
 }
 

@@ -18,7 +18,7 @@ class Compartment<T> {
 }
 
 extension Compartment {
-    func sync<U>(_ op: (inout T) throws ->U) rethrows -> U {
+    func sync<U>(_ op: (inout T) throws -> U) rethrows -> U {
         try queue.sync {
             try op(&self.tenant)
         }
@@ -28,6 +28,12 @@ extension Compartment {
         queue.async {
             op(&self.tenant)
         }
+    }
+    
+    // Call only if inside compartment queue
+    var unprotectedValue: T {
+        get { tenant }
+        set { tenant = newValue }
     }
 }
 
@@ -41,7 +47,13 @@ extension Compartment {
     }
     
     var value: T {
-        sync {$0}
+        queue.sync { self.tenant }
+    }
+}
+
+extension Compartment: Equatable where T: Equatable {
+    static func == (lhs: Compartment<T>, rhs: Compartment<T>) -> Bool {
+        lhs.value == rhs.value
     }
 }
 

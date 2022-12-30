@@ -1,156 +1,238 @@
 //
-//  File.swift
+//  WsConnection.swift
 //  
 //
-//  Created by Daniel Leping on 15/12/2020.
+//  Created by Yehor Popovych on 29.12.2022.
 //
 
 import Foundation
+#if os(Linux) || os(Windows)
+import FoundationNetworking
+#endif
 
-import WebSocket
-import NIOConcurrencyHelpers
+protocol URLSessionWebSocketProxyDelegate: AnyObject {
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?)
 
-extension WebSocketError {
-    var connection: ConnectionError {
-        switch self {
-        case .invalidResponseStatus(head: let head):
-            return ConnectionError.http(code: head.status.code, message: head.description.data(using: .utf8))
-        default:
-            return ConnectionError.network(cause: self)
-        }
-    }
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?)
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?)
 }
 
-public class WsConnection: PersistentConnection, Connectable {
-    private let queue: DispatchQueue
-    private let sendq: DispatchQueue
+class URLSessionWebSocketDelegateProxyWrapper: NSObject, URLSessionWebSocketDelegate {
+    public weak var delegate: URLSessionWebSocketProxyDelegate?
+    public var wrapped: URLSessionDelegate?
+    public let delegateQueue: OperationQueue
+    
+    public init(wrapped: URLSessionDelegate?, delegateQueue: OperationQueue) {
+        self.wrapped = wrapped
+        self.delegateQueue = delegateQueue
+    }
+    
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+        self.delegate?.urlSession(session, webSocketTask: webSocketTask, didOpenWithProtocol: `protocol`)
+    }
+
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+        self.delegate?.urlSession(session, webSocketTask: webSocketTask, didCloseWith: closeCode, reason: reason)
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        self.delegate?.urlSession(session, task: task, didCompleteWithError: error)
+    }
+    
+    // TODO: Pass task delegate to the wrapped delegate
+}
+
+public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocketProxyDelegate {
+    private struct State {
+        var connected: ConnectableState = .disconnected
+        var task: Optional<URLSessionWebSocketTask> = nil
+        var requests: [Data] = []
+        var sending: Bool = false
+    }
     
     private let url: URL
-    private let ws: WebSocket
-    private let headers: HTTPHeaders
-    private let connectTimeout: TimeAmount
-    
-    private var dead: NIOAtomic<Bool>
-    private var _connected: Compartment<ConnectableState>
+    private var urlSession: URLSession
+    private let headers: [(key: String, value: String)]
+    private let queue: DispatchQueue
+    private let connectTimeout: TimeInterval
+    private let pingInterval: TimeInterval?
+    private var state: Compartment<State>
+    private let syncQueue: DispatchQueue
+    // Can be not protected because used only in syncQueue
+    private var pingTimer: DispatchSourceTimer?
     
     public var sink: ConnectionSink
+    public var connected: ConnectableState {
+        state.value.connected
+    }
     
-    init(
-        url: URL, autoconnect: Bool,
-        queue: DispatchQueue, pool: DispatchQueue,
-        headers: HTTPHeaders, tls: TLSConfiguration,
-        connectTimeout: TimeAmount, pingInterval: TimeAmount?,
-        sink: @escaping ConnectionSink
+    public init(url: URL, autoconnect: Bool,
+                session: URLSession,
+                queue: DispatchQueue,
+                headers: [(key: String, value: String)],
+                connectTimeout: TimeInterval,
+                pingInterval: TimeInterval?,
+                pool: DispatchQueue,
+                sink: @escaping ConnectionSink
     ) {
-        self.dead = .makeAtomic(value: false)
-        self._connected = Compartment(.disconnected, queue: DispatchQueue(label: "one.tesseract.rpc.ws.state", qos: .userInteractive, target: pool))
-        
         self.url = url
-        self.queue = queue
-        self.sink = sink
         self.headers = headers
+        self.sink = sink
+        self.queue = queue
         self.connectTimeout = connectTimeout
+        self.pingInterval = pingInterval
+        self.pingTimer = nil
+        let delegate = URLSessionWebSocketDelegateProxyWrapper(wrapped: session.delegate,
+                                                               delegateQueue: session.delegateQueue)
+        self.syncQueue = DispatchQueue(
+            label: "one.tesseract.jsonrpc.ws.sync",
+            autoreleaseFrequency: .workItem,
+            target: pool)
+        self.state = Compartment(State(), queue: self.syncQueue)
         
-        self.sendq = DispatchQueue(label: "one.tesseract.rpc.ws.send", qos: .userInitiated, target: pool)
-        self.sendq.suspend() //don't change to .initiallyInactive. This is different
-        
-        self.ws = WebSocket(callbackQueue: queue, tlsConfiguration: tls)
-        self.ws.pingInterval = pingInterval
-        
-        ws.onConnected = { [weak self] _ in
-            guard let this = self else {
-                return
-            }
-            
-            this._connected.assign(value: .connected)
-            this.flush(state: .connected)
-            
-            this.sendq.resume()
-        }
-        
-        ws.onDisconnected = { [weak self] (_, _) in
-            guard let this = self else {
-                return
-            }
-            
-            this.sendq.suspend()
-            this._connected.assign(value: .disconnected)
-            this.flush(state: .disconnected)
-        }
-        
-        ws.onError = { [weak self] (error, _) in
-            self?.flush(error: error.connection)
-        }
-        
-        ws.onData = { [weak self] (data, _) in //make Either<Data, String>
-            switch data {
-            case .binary(let data):
-                self?.flush(data: data)
-            case .text(let text):
-                self?.flush(string: text)
-            }
-            
-        }
+        let opQueue = OperationQueue()
+        opQueue.underlyingQueue = self.syncQueue
+        self.urlSession = URLSession(configuration: session.configuration, delegate: delegate, delegateQueue: opQueue)
+        delegate.delegate = self
         
         if autoconnect {
             self.connect()
         }
     }
     
-    deinit {
-        dead.store(true)
-        if _connected != .disconnected {
-            //this is a correct behaviour and should not be modified as we need to keep the socket alive till we're sure it's disconnected. Let it gracefully finalize the communication with server. Even sservers like polite clients.
-            var keepWsAlive:WebSocket? = ws
-            ws.onDisconnected = { (_, _) in
-                if let _ = keepWsAlive {
-                    keepWsAlive = nil
-                }
-            }
-            switch _connected.value {
-            case .disconnected:
-                ws.onDisconnected = nil
-            case .connecting, .connected:
-                ws.disconnect()
-            default:
-                break
-            }
+    public func send(data: Data) {
+        state.async { state in
+            state.requests.append(data)
+            self.sendNext(state: &state)
         }
-        if _connected == .disconnected || _connected == .connecting {
-            sendq.resume()
-        }
-    }
-    
-    public var connected: ConnectableState {
-        _connected.value
     }
     
     public func connect() {
-        _connected.async { [weak self] connected in
-            guard let this = self else {
+        state.async { state in
+            guard state.connected == .disconnected || state.connected == .disconnecting else {
                 return
             }
-            
-            if connected == .disconnected || connected == .disconnecting {
-                connected = .connecting
-                this.flush(state: .connecting)
-                this.ws.connect(url: this.url, headers: this.headers, timeout: this.connectTimeout)
+            var req = URLRequest(url: self.url)
+            req.timeoutInterval = self.connectTimeout
+            for (k, v) in self.headers {
+                req.addValue(v, forHTTPHeaderField: k)
             }
+            state.task = self.urlSession.webSocketTask(with: req)
+            state.connected = .connecting
+            self.flush(state: .connecting)
+            state.task?.resume()
         }
     }
     
     public func disconnect() {
-        _connected.async { [weak self] connected in
-            guard let this = self else {
+        state.async { state in
+            guard state.connected == .connected || state.connected == .connecting else {
                 return
             }
-            
-            if connected == .connected || connected == .connecting {
-                connected = .disconnecting
-                this.flush(state: .disconnecting)
-                this.ws.disconnect()
+            state.connected = .disconnecting
+            self.flush(state: .disconnecting)
+            state.task?.cancel(with: .goingAway, reason: nil)
+            state.task = nil
+        }
+    }
+    
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+        print("CONNECTED")
+        state.unprotectedValue.connected = .connected
+        flush(state: .connected)
+        readNext(state: &state.unprotectedValue)
+        sendNext(state: &state.unprotectedValue)
+        startPing(state: &state.unprotectedValue)
+    }
+    
+    func urlSession(_ session: URLSession,
+                    webSocketTask: URLSessionWebSocketTask,
+                    didCloseWith closeCode: URLSessionWebSocketTask.CloseCode,
+                    reason: Data?) {
+        print("CLOSED")
+        state.unprotectedValue.connected = .disconnected
+        stopPing()
+        flush(state: .disconnected)
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        print("FINISHED: \(String(describing: error))")
+        state.unprotectedValue.connected = .disconnected
+        stopPing()
+        if let error = error {
+            flush(error: .network(cause: error))
+        }
+    }
+    
+    deinit {
+        print("DEINIT CALLED")
+        sink = { _ in }
+        urlSession.invalidateAndCancel()
+    }
+    
+    // Method should be called into State queue
+    private func sendNext(state: inout State) {
+        guard state.connected == .connected,
+              !state.sending,
+              state.requests.count > 0 else { return }
+        state.sending = true
+        let message = state.requests.removeFirst()
+        state.task!.send(.data(message)) { [weak self] error in
+            if let error = error {
+                self?.flush(error: .network(cause: error))
+            }
+            self?.state.async { state in
+                state.sending = false
+                self?.sendNext(state: &state)
             }
         }
+    }
+    
+    // Method should be called into State queue
+    private func readNext(state: inout State) {
+        guard state.connected == .connected else { return }
+        state.task!.receive { [weak self] result in
+            switch result {
+            case .success(let message):
+                switch message {
+                case .data(let data): self?.flush(data: data)
+                case .string(let str): self?.flush(string: str)
+                @unknown default: fatalError()
+                }
+            case .failure(let err): self?.flush(error: .network(cause: err))
+            }
+            self?.state.async { state in
+                self?.readNext(state: &state)
+            }
+        }
+    }
+    
+    // Method should be called into State queue
+    private func startPing(state: inout State) {
+        guard state.connected == .connected, let pingInterval = pingInterval else { return }
+        let timer = DispatchSource.makeTimerSource(queue: self.syncQueue)
+        timer.schedule(deadline: .now() + .milliseconds(Int(pingInterval * 1000)),
+                       repeating: .milliseconds(Int(pingInterval * 1000)),
+                       leeway: .milliseconds(100))
+        timer.setEventHandler { [weak self] in
+            self?.state.async { state in
+                guard state.connected == .connected else { return }
+                state.task!.sendPing { error in
+                    if let error = error {
+                        self?.flush(error: .network(cause: error))
+                    }
+                }
+            }
+        }
+        timer.activate()
+    }
+    
+    // Method should be called into State queue
+    private func stopPing() {
+        guard let timer = self.pingTimer else { return }
+        self.pingTimer = nil
+        timer.cancel()
     }
     
     private func flush(message: ConnectionMessage) {
@@ -169,36 +251,11 @@ public class WsConnection: PersistentConnection, Connectable {
     }
     
     private func flush(string: String) {
-        flush(data: string.data(using: .utf8)!) //TODO: check error on conversion
+        flush(data: Data(string.utf8))
     }
     
     private func flush(error: ConnectionError) {
         flush(message: .error(error))
-    }
-    
-    public func send(data: Data) {
-        sendq.async { [weak self] in
-            guard let this = self else {
-                return
-            }
-            // dead is better than just weak ws, because we can get it earlier and avoid scheduled calls execution when already dead
-            if this.dead.load() {
-                return
-            }
-            
-            this.ws.send(data) { [weak self] error in
-                guard let error = error else {
-                    return
-                }
-                
-                switch error {
-                case .disconnected:
-                    self?.send(data: data)
-                default:
-                    return
-                }
-            }
-        }
     }
 }
 
@@ -208,19 +265,21 @@ public struct WsConnectionFactory : PersistentConnectionFactory {
     
     public let url: URL
     public let autoconnect: Bool
-    public let pool: DispatchQueue
+    public let session: URLSession
     public let headers: [(key: String, value: String)]
-    public let tlsConfiguration: TLSConfiguration
     public let connectTimeout: TimeInterval
     public let pingInterval: TimeInterval?
+    public let pool: DispatchQueue
     
     public func connection(queue: DispatchQueue, sink: @escaping ConnectionSink) -> Connection {
         WsConnection(
             url: url, autoconnect: autoconnect,
-            queue: queue, pool: pool, headers: HTTPHeaders(headers),
-            tls: tlsConfiguration,
-            connectTimeout: .milliseconds(Int64(connectTimeout * 1000)),
-            pingInterval: pingInterval.map { .milliseconds(Int64($0 * 1000)) },
+            session: session,
+            queue: queue,
+            headers: headers,
+            connectTimeout: connectTimeout,
+            pingInterval: pingInterval,
+            pool: pool,
             sink: sink
         )
     }
@@ -229,17 +288,18 @@ public struct WsConnectionFactory : PersistentConnectionFactory {
 extension ConnectionFactoryProvider where Factory == WsConnectionFactory {
     public static func ws(
         url: URL, autoconnect: Bool = true,
-        pool: DispatchQueue = .global(qos: .utility),
+        session: URLSession = .shared,
         headers: [(key: String, value: String)] = [],
-        tls: TLSConfiguration = .makeClientConfiguration(),
-        connectTimeout: TimeInterval = 10,
-        pingInterval: TimeInterval? = nil
+        connectTimeout: TimeInterval = 20,
+        pingInterval: TimeInterval? = nil,
+        pool: DispatchQueue = .global(qos: .userInteractive)
     ) -> Self {
         return Self(factory: WsConnectionFactory(
-            url: url, autoconnect: autoconnect, pool: pool,
-            headers: headers, tlsConfiguration: tls,
+            url: url, autoconnect: autoconnect,
+            session: session, headers: headers,
             connectTimeout: connectTimeout,
-            pingInterval: pingInterval
+            pingInterval: pingInterval,
+            pool: pool
         ))
     }
 }

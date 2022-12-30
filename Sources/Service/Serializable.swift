@@ -19,7 +19,6 @@ extension Client {
 }
 
 #if swift(>=5.5)
-@available(macOS 10.15, iOS 13, macCatalyst 13, tvOS 13, watchOS 6, *)
 extension Client {
     public func call<Params: Encodable, Res: Decodable>(
         method: String, params: Params, _ res: Res.Type

@@ -5,20 +5,19 @@ import PackageDescription
 
 let package = Package(
     name: "JsonRPC",
-    platforms: [.macOS(.v10_12), .iOS(.v10), .tvOS(.v10), .watchOS(.v6)],
+    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6)],
     products: [
         .library(
             name: "JsonRPC",
             targets: ["JsonRPC"]),
     ],
     dependencies: [
-        .package(name: "WebSocket", url: "https://github.com/tesseract-one/WebSocket.swift.git", from: "0.2.0"),
         .package(name: "Serializable", url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.3")
     ],
     targets: [
         .target(
             name: "JsonRPC",
-            dependencies: ["WebSocket"],
+            dependencies: [],
             path: "Sources"),
         .testTarget(
             name: "JsonRPCTests",

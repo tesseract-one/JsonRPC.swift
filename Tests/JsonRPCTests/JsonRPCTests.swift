@@ -9,7 +9,6 @@ import Foundation
 import Serializable
 import XCTest
 @testable import JsonRPC
-import WebSocket
 
 struct NewHeadsNotification: Decodable {
     let subscription: String
@@ -111,7 +110,7 @@ class RPCTests: XCTestCase {
             wsExp.fulfill()
         }
         
-        self.waitForExpectations(timeout: 20, handler: nil)
+        self.waitForExpectations(timeout: 30, handler: nil)
         
         XCTAssertEqual(resHttp, resWs)
     }
