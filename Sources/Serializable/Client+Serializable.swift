@@ -23,7 +23,7 @@ extension Client {
 #if swift(>=5.5)
 extension Client {
     public func call<Params: Encodable, Res: Decodable>(
-        method: String, params: Params, _ res: Res.Type
+        method: String, params: Params, res: Res.Type
     ) async throws -> Res {
         try await call(method: method, params: params, res, SerializableValue.self)
     }
