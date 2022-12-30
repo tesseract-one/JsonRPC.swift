@@ -9,6 +9,9 @@ import Foundation
 import Serializable
 import XCTest
 @testable import JsonRPC
+#if !COCOAPODS
+@testable import JsonRPCSerializable
+#endif
 
 struct NewHeadsNotification: Decodable {
     let subscription: String

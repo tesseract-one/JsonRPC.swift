@@ -23,15 +23,14 @@ Pod::Spec.new do |s|
   s.module_name = 'JsonRPC'
   
   s.subspec 'RPC' do |ss|
-    ss.source_files = 'Sources/**/*.swift'
-    ss.exclude_files = 'Sources/Service/Serializable.swift'
+    ss.source_files = 'Sources/RPC/**/*.swift'
   end
   
   s.subspec 'Serializable' do |ss|
     ss.dependency 'JsonRPC.swift/RPC'
     ss.dependency 'Serializable.swift', '~> 0.2.3'
     
-    ss.source_files = 'Sources/Service/Serializable.swift'
+    ss.source_files = 'Sources/Serializable/**/*.swift'
     
     ss.test_spec 'Tests' do |test_spec|
         test_spec.platforms = {:ios => '13.0', :osx => '10.15', :tvos => '13.0'}

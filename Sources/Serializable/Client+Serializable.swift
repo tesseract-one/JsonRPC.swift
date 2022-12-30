@@ -1,13 +1,15 @@
 //
-//  Serializable.swift
+//  Client+Serializable.swift
 //  
 //
-//  Created by Yehor Popovych on 14.06.2022.
+//  Created by Yehor Popovych on 30.12.2022.
 //
 
-#if canImport(Serializable)
 import Foundation
 import Serializable
+#if !COCOAPODS
+import JsonRPC
+#endif
 
 extension Client {
     public func call<Params: Encodable, Res: Decodable>(
@@ -26,6 +28,4 @@ extension Client {
         try await call(method: method, params: params, res, SerializableValue.self)
     }
 }
-#endif
-
 #endif
