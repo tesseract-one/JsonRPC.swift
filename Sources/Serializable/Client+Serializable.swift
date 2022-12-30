@@ -27,5 +27,11 @@ extension Client {
     ) async throws -> Res {
         try await call(method: method, params: params, res, SerializableValue.self)
     }
+    
+    public func call<Params: Encodable, Res: Decodable>(
+        method: String, params: Params
+    ) async throws -> Res {
+        try await call(method: method, params: params, Res.self, SerializableValue.self)
+    }
 }
 #endif

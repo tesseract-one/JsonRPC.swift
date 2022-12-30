@@ -37,9 +37,37 @@ extension JSONEncoder.DateEncodingStrategy {
     }
 }
 
-extension JSONEncoder: ContentEncoder {
+extension JSONDecoder.DataDecodingStrategy {
+    public static let hex = custom { decoder in
+        let container = try decoder.singleValueContainer()
+        let hex = try container.decode(String.self)
+        guard let data = Hex.decode(hex: hex) else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Bad Hex value")
+        }
+        return data
+    }
+}
+
+extension JSONEncoder.DataEncodingStrategy {
+    public static let prefixedHex = custom { data, encoder in
+        var container = encoder.singleValueContainer()
+        try container.encode(Hex.encode(data: data, prefix: true))
+    }
+    
+    public static let nonPrefixedHex = custom { data, encoder in
+        var container = encoder.singleValueContainer()
+        try container.encode(Hex.encode(data: data, prefix: false))
+    }
+}
+
+extension JSONEncoder: ContentEncoder {    
     public var contentType: ContentType {
         .json
+    }
+    
+    public var context: [CodingUserInfoKey : Any] {
+        get { userInfo }
+        set { userInfo = newValue }
     }
     
     public static var rpc: JSONEncoder = {
@@ -54,6 +82,11 @@ extension JSONEncoder: ContentEncoder {
 extension JSONDecoder: ContentDecoder {
     public var contentType: ContentType {
         .json
+    }
+    
+    public var context: [CodingUserInfoKey : Any] {
+        get { userInfo }
+        set { userInfo = newValue }
     }
     
     public static var rpc: JSONDecoder = {

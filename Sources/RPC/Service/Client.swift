@@ -137,5 +137,13 @@ extension Client {
             self.call(method: method, params: params, res, err) { cont.resume(with: $0) }
         }
     }
+    
+    public func call<Params: Encodable, Res: Decodable, Err: Decodable>(
+        method: String, params: Params, _ err: Err.Type
+    ) async throws -> Res {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params, Res.self, err) { cont.resume(with: $0) }
+        }
+    }
 }
 #endif

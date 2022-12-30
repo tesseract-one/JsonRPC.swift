@@ -28,10 +28,14 @@ public protocol ContentTypeAware {
 }
 
 public protocol ContentEncoder: ContentTypeAware {
+    var context: [CodingUserInfoKey: Any] { get set }
+    
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 
 public protocol ContentDecoder: ContentTypeAware {
+    var context: [CodingUserInfoKey: Any] { get set }
+    
     func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T
 }
 
