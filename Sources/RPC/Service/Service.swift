@@ -60,12 +60,12 @@ extension Service: Connectable where Core: Connectable {
 
 extension Service: ContentCodersProvider where Core: ContentCodersProvider {
     public var contentDecoder: ContentDecoder {
-        core.contentDecoder
+        get { core.contentDecoder }
+        set { core.contentDecoder = newValue }
     }
     
     public var contentEncoder: ContentEncoder {
-        core.contentEncoder
+        get { core.contentEncoder }
+        set { core.contentEncoder = newValue }
     }
-    
-    
 }
