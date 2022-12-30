@@ -44,7 +44,7 @@ extension ServiceCore {
         return response
     }
     
-    func serialize<Params: Encodable, Err: Decodable>(id: RPCID = RPCID.next(), method: String, params: Params, _ err: Err.Type) -> Result<Data, RequestError<Params, Err>> {
+    func serialize<Params: Encodable, Err: Decodable>(id: RPCID, method: String, params: Params, _ err: Err.Type) -> Result<Data, RequestError<Params, Err>> {
         let request = RequestEnvelope(jsonrpc: "2.0", id: id, method: method, params: params)
         return encoder.tryEncode(request).mapError(ServiceError.codec).mapError(RequestError<Params, Err>.service)
     }
@@ -55,7 +55,7 @@ public extension ServiceCore where Connection: SingleShotConnection {
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
         response callback: @escaping RequestCallback<Params, Res, Err>
     ) {
-        let encoded = serialize(method: method, params: params, Err.self)
+        let encoded = serialize(id: nextId(), method: method, params: params, Err.self)
         
         //return error if we can't encode
         guard case let .success(data) = encoded else {
@@ -93,7 +93,7 @@ public extension ServiceCore where Connection: PersistentConnection {
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
         response callback: @escaping RequestCallback<Params, Res, Err>
     ) {
-        let id = RPCID.next()
+        let id = nextId()
         let encoded = serialize(id: id, method: method, params: params, Err.self)
         
         //return error if we can't encode

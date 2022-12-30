@@ -57,3 +57,15 @@ extension Service: Connectable where Core: Connectable {
         core.disconnect()
     }
 }
+
+extension Service: ContentCodersProvider where Core: ContentCodersProvider {
+    public var contentDecoder: ContentDecoder {
+        core.contentDecoder
+    }
+    
+    public var contentEncoder: ContentEncoder {
+        core.contentEncoder
+    }
+    
+    
+}

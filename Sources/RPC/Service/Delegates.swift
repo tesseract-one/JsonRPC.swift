@@ -19,11 +19,10 @@ public protocol ErrorDelegate {
     func error(_ error: ServiceError)
 }
 
-public protocol ServerDelegate {
-//    func request(id: Int, method: String, params: Parsable, response: Callback<Encodable, Error>)
+public protocol NotificationDelegate {
     func notification(method: String, params: Parsable)
 }
 
-//ErrorDelegate
-//StateDelegate
-//ServiceDelegate
+public protocol ServerDelegate {
+//    func request(id: Int, method: String, params: Parsable, response: Callback<Encodable, Error>)
+}

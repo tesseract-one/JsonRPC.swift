@@ -9,21 +9,6 @@ import Foundation
 
 public typealias RPCID = UInt32
 
-private let _id_current = Synced<RPCID>(value: 0)
-
-extension RPCID {
-    static func next() -> RPCID {
-        _id_current.sync { value in
-            if (value == RPCID.max) {
-                value = 1
-            } else {
-                value += 1
-            }
-            return value
-        }
-    }
-}
-
 public struct RequestEnvelope<P: Encodable>: Encodable {
     public let jsonrpc: String
     public let id: RPCID

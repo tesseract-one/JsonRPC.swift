@@ -46,7 +46,7 @@ extension ServiceCore where Connection: PersistentConnection, Delegate: AnyObjec
     }
     
     func process(notification: String, data: Data) {
-        guard let delegate = self.delegate as? ServerDelegate else {
+        guard let delegate = self.delegate as? NotificationDelegate else {
             return
         }
         
