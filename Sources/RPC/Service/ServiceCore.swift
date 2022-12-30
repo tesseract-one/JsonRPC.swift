@@ -15,8 +15,8 @@ public protocol ServiceCoreProtocol {
 }
 
 public protocol ContentCodersProvider {
-    var contentDecoder: ContentDecoder { get }
-    var contentEncoder: ContentEncoder { get }
+    var contentDecoder: ContentDecoder { get set }
+    var contentEncoder: ContentEncoder { get set }
 }
 
 public class ServiceCore<Connection, Delegate>: ServiceCoreProtocol {
@@ -68,6 +68,13 @@ extension ServiceCore: Connectable where Connection: Connectable {
 }
 
 extension ServiceCore: ContentCodersProvider {
-    public var contentDecoder: ContentDecoder { decoder }
-    public var contentEncoder: ContentEncoder { encoder }
+    public var contentDecoder: ContentDecoder {
+        get { decoder }
+        set { decoder = newValue }
+    }
+    
+    public var contentEncoder: ContentEncoder {
+        get { encoder }
+        set { encoder = newValue }
+    }
 }
