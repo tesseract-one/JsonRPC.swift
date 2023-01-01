@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SingleShotCaller<Connection: SingleShotConnection, Delegate> {
+struct SingleShotCaller<Connection: SingleShotConnection, Delegate: AnyObject> {
     let core: ServiceCore<Connection, Delegate>
 }
 
@@ -20,7 +20,7 @@ extension SingleShotCaller: Client {
     }
 }
 
-struct PersistentCaller<Connection: PersistentConnection, Delegate> {
+struct PersistentCaller<Connection: PersistentConnection, Delegate: AnyObject> {
     let core: ServiceCore<Connection, Delegate>
 }
 

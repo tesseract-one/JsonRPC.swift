@@ -9,7 +9,7 @@ import Foundation
 
 public protocol ServiceCoreProtocol {
     associatedtype Connection
-    associatedtype Delegate
+    associatedtype Delegate: AnyObject
     
     var delegate: Delegate? {get set}
 }
@@ -19,7 +19,7 @@ public protocol ContentCodersProvider {
     var contentEncoder: ContentEncoder { get set }
 }
 
-public class ServiceCore<Connection, Delegate>: ServiceCoreProtocol {
+public class ServiceCore<Connection, Delegate: AnyObject>: ServiceCoreProtocol {
     var queue: DispatchQueue
     var connection: Connection
     
@@ -28,7 +28,7 @@ public class ServiceCore<Connection, Delegate>: ServiceCoreProtocol {
     
     let rpcId: Synced<UInt32>
     
-    public var delegate: Delegate?
+    public weak var delegate: Delegate?
     
     var responseClosures = Dictionary<RPCID, ResponseClosure>()
     

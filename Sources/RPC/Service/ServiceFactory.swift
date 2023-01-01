@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol ServiceFactory: FactoryBase {
-    associatedtype Delegate
+    associatedtype Delegate: AnyObject
     
     func core(queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> ServiceCore<Connection, Delegate>
     func caller(service: ServiceCore<Connection, Delegate>) -> Client
@@ -37,7 +37,7 @@ extension ServiceFactoryProvider: ServiceFactory {
 
 ///Single Shot Service
 
-public protocol SingleShotServiceFactory: ServiceFactory where Connection: SingleShotConnection, Delegate == Void {
+public protocol SingleShotServiceFactory: ServiceFactory where Connection: SingleShotConnection, Delegate == VoidDelegate {
 }
 
 extension SingleShotServiceFactory where Self: SingleShotConnectionFactory {

@@ -7,11 +7,11 @@
 
 import Foundation
 
-typealias ResponseClosure = (Data)->Void
+typealias ResponseClosure = (Data) -> Void
 
 protocol ResponseClosuresRegistry {
     func register(id: RPCID, closure: @escaping ResponseClosure)
-    func remove(id: RPCID, result: @escaping (ResponseClosure?)->Void)
+    func remove(id: RPCID, result: @escaping (ResponseClosure?) -> Void)
 }
 
 extension ServiceCore: ResponseClosuresRegistry where Connection: PersistentConnection {
@@ -21,7 +21,7 @@ extension ServiceCore: ResponseClosuresRegistry where Connection: PersistentConn
         }
     }
     
-    func remove(id: RPCID, result: @escaping (ResponseClosure?)->Void) {
+    func remove(id: RPCID, result: @escaping (ResponseClosure?) -> Void) {
         queue.async {
             result(self.responseClosures.removeValue(forKey: id))
         }

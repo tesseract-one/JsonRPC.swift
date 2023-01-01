@@ -120,7 +120,7 @@ class RPCTests: XCTestCase {
     
     func testErrorDelegate() {
         //wrong URL
-        var service: Delegator = JsonRpc(.ws(url: URL(string: "wss://api.avax-test.network/ext/bc/C/ws1")!, pool: pool), queue: queue)
+        var service: Persistent = JsonRpc(.ws(url: URL(string: "wss://api.avax-test.network/ext/bc/C/ws1")!, pool: pool), queue: queue)
         
         service.delegate = TestErrorDelegate(error: self.expectation(description: "Error"))
         
@@ -128,7 +128,7 @@ class RPCTests: XCTestCase {
     }
     
     func testWsLong() {
-        var service: Client & Delegator & Connectable = JsonRpc(.ws(url: .avaMainWs, autoconnect: false, pool: pool), queue: queue)
+        var service: Client & Persistent & Connectable = JsonRpc(.ws(url: .avaMainWs, autoconnect: false, pool: pool), queue: queue)
         
         let delegate = TestDelegate(connected: self.expectation(description: "Connected"), notified: self.expectation(description: "Notified"))
         service.delegate = delegate

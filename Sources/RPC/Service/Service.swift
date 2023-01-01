@@ -33,7 +33,7 @@ extension Service: Client {
     }
 }
 
-extension Service: Delegator where Core.Delegate == AnyObject {
+extension Service: Persistent where Core.Delegate == AnyObject {
     public var delegate: AnyObject? {
         get {
             core.delegate
