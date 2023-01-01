@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol Persistent {
+public protocol Persistent: AnyObject {
     var delegate: AnyObject? {get set}
 }
 
