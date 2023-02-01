@@ -14,7 +14,6 @@ jobs:
         run: pod repo update
       - name: Build and Test CocoaPods
         run: pod lib lint --allow-warnings --fail-fast
- Disabled for now. Next swift version should have Web Socket support
   linux:
     runs-on: ubuntu-latest
     container:
