@@ -165,7 +165,6 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        print("CONNECTED")
         state.unprotectedValue.connected = .connected
         flush(state: .connected)
         readNext(state: &state.unprotectedValue)
@@ -177,14 +176,12 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
                     webSocketTask: URLSessionWebSocketTask,
                     didCloseWith closeCode: URLSessionWebSocketTask.CloseCode,
                     reason: Data?) {
-        print("CLOSED")
         state.unprotectedValue.connected = .disconnected
         stopPing()
         flush(state: .disconnected)
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        print("FINISHED: \(String(describing: error))")
         state.unprotectedValue.connected = .disconnected
         stopPing()
         if let error = error {
@@ -193,7 +190,6 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
     }
     
     deinit {
-        print("DEINIT CALLED")
         sink = { _ in }
         urlSession.invalidateAndCancel()
     }

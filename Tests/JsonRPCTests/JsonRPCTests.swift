@@ -18,7 +18,7 @@ struct NewHeadsNotification: Decodable {
     let result: SerializableValue
 }
 
-public class TestDelegate: ConnectableDelegate, ServerDelegate, ErrorDelegate {
+public class TestDelegate: ConnectableDelegate, NotificationDelegate, ErrorDelegate {
     private let connected: XCTestExpectation
     private var notified: XCTestExpectation?
     private var _state: ConnectableState
