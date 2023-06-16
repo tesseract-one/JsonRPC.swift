@@ -15,8 +15,58 @@ public struct CallParam: Encodable {
     }
     
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(value)
+        switch value {
+        case let val as Bool:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as String:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Int:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Int8:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Int16:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Int32:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Int64:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Int:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as UInt8:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as UInt16:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as UInt32:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as UInt64:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Float:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Double:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Data:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        case let val as Date:
+            var container = encoder.singleValueContainer()
+            try container.encode(val)
+        default:
+            try value.encode(to: encoder)
+        }
     }
 }
 
