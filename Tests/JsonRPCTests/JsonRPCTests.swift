@@ -122,9 +122,11 @@ final class RPCTests: XCTestCase {
         //wrong URL
         let service: Persistent = JsonRpc(.ws(url: URL(string: "wss://api.avax-test.network/ext/bc/C/ws1")!, pool: pool), queue: queue)
         
-        service.delegate = TestErrorDelegate(error: self.expectation(description: "Error"))
+        let delegate = TestErrorDelegate(error: self.expectation(description: "Error"))
         
-        self.waitForExpectations(timeout: 10, handler: nil)
+        service.delegate = delegate
+        
+        self.waitForExpectations(timeout: 20, handler: nil)
     }
     
     func testWsLong() {

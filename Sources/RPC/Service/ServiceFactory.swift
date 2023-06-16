@@ -62,21 +62,19 @@ public protocol PersistentServiceFactory: ServiceFactory where Connection: Persi
 
 extension PersistentServiceFactory where Self: PersistentConnectionFactory {
     public func core(queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> ServiceCore<Connection, Delegate> {
-        var this:WeakRef<ServiceCore<Connection, Delegate>> = WeakRef(ref: nil)
+        var this: WeakRef<ServiceCore<Connection, Delegate>> = WeakRef(ref: nil)
             
-            let conn = self.connection(queue: queue) { message in
-                guard let this = this.ref else {
-                    //we're dead here
-                    return
-                }
-                
-                this.process(message: message)
+        let conn = self.connection(queue: queue) { message in
+            guard let this = this.ref else {
+                //we're dead here
+                return
             }
+            this.process(message: message)
+        }
         
-            
         let service: ServiceCore<Connection, Delegate> = ServiceCore(connection: conn, queue: queue, encoder: encoder, decoder: decoder)
-            //for our sink closure
-            this.ref = service
+        //for our sink closure
+        this.ref = service
         
         return service
     }
