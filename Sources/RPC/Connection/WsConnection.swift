@@ -194,7 +194,9 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
                 switch message {
                 case .data(let data): self?.flush(data: data)
                 case .string(let str): self?.flush(string: str)
+                #if !os(Linux) && !os(Windows)
                 @unknown default: fatalError()
+                #endif
                 }
             case .failure(let err): self?.flush(error: .network(cause: err))
             }
