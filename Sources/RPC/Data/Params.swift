@@ -15,7 +15,8 @@ public struct CallParam: Encodable {
     }
     
     public func encode(to encoder: Encoder) throws {
-        try value.encode(to: encoder)
+        var container = encoder.singleValueContainer()
+        try container.encode(value)
     }
 }
 

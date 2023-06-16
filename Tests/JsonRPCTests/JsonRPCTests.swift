@@ -86,7 +86,7 @@ extension URL {
     static var avaMainWs:URL {URL(string: "wss://api.avax.network/ext/bc/C/ws")!}
 }
 
-class RPCTests: XCTestCase {
+final class RPCTests: XCTestCase {
     let queue = DispatchQueue.main
     let pool = DispatchQueue.global()
     
