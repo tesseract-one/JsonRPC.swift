@@ -306,9 +306,10 @@ extension URLSessionWebSocketTask {
         _ message: Message,
         completionHandler: @escaping (Error?) -> Void
     ) {
-        Task {
+        Task.detached {
             do {
                 try await self.send(message)
+                completionHandler(nil)
             } catch {
                 completionHandler(error)
             }
@@ -317,7 +318,7 @@ extension URLSessionWebSocketTask {
     func receive(
         completionHandler: @escaping (Result<Message, Error>) -> Void
     ) {
-        Task {
+        Task.detached {
             do {
                 let message = try await self.receive()
                 completionHandler(.success(message))
