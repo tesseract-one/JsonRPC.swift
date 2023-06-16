@@ -8,6 +8,33 @@
 import Foundation
 #if os(Linux) || os(Windows)
 import FoundationNetworking
+
+extension URLSessionWebSocketTask {
+    func send(
+        _ message: Message,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        Task.detached {
+            do {
+                try await self.send(message)
+            } catch {
+                completionHandler(error)
+            }
+        }
+    }
+    func receive(
+        completionHandler: @escaping (Result<Message, Error>) -> Void
+    ) {
+        Task.detached {
+            do {
+                let message = try await self.receive()
+                completionHandler(.success(message))
+            } catch {
+                completionHandler(.failure(error))
+            }
+        }
+    }
+}
 #endif
 
 protocol URLSessionWebSocketProxyDelegate: AnyObject {
