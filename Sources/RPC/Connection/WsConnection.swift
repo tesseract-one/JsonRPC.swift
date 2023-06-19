@@ -305,7 +305,7 @@ extension ConnectionFactoryProvider where Factory == WsConnectionFactory {
 #if os(Linux) || os(Windows)
 extension URLSessionWebSocketTask {
     func send(
-        _ message: Message,
+        _ message: URLSessionWebSocketTask.Message,
         completionHandler: @escaping (Error?) -> Void
     ) {
         Task.detached {
@@ -318,12 +318,11 @@ extension URLSessionWebSocketTask {
         }
     }
     func receive(
-        completionHandler: @escaping (Result<Message, Error>) -> Void
+        completionHandler: @escaping (Result<URLSessionWebSocketTask.Message, Error>) -> Void
     ) {
         Task.detached {
             do {
-                let message = try await self.receive()
-                completionHandler(.success(message))
+                completionHandler(.success(try await self.receive()))
             } catch {
                 completionHandler(.failure(error))
             }

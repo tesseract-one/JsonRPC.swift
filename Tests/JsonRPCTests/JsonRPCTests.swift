@@ -74,7 +74,7 @@ public class TestErrorDelegate: ConnectableDelegate, ErrorDelegate {
         if _state == .connecting {
             self.error.fulfill()
         }
-        //print(error)
+        print(error)
     }
 }
 
