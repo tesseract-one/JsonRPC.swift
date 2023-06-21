@@ -13,7 +13,7 @@ public protocol ServiceFactory: FactoryBase {
     func core(
         queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
     ) -> ServiceCore<Connection, Delegate>
-    func caller(service: ServiceCore<Connection, Delegate>) -> Client
+    func caller(service: ServiceCore<Connection, Delegate>) -> Callable
 }
 
 public struct ServiceFactoryProvider<Factory: ServiceFactory>: ConnectionFactoryProvider {
@@ -32,7 +32,7 @@ extension ServiceFactoryProvider: ServiceFactory {
         factory.core(queue: queue, encoder: encoder, decoder: decoder)
     }
     
-    public func caller(service: ServiceCore<Connection, Delegate>) -> Client {
+    public func caller(service: ServiceCore<Connection, Delegate>) -> Callable {
         factory.caller(service: service)
     }
 }
@@ -54,7 +54,7 @@ extension SingleShotServiceFactory where Self: SingleShotConnectionFactory {
         return ServiceCore(connection: self.connection(queue: queue, headers: headers), queue: queue, encoder: encoder, decoder: decoder)
     }
     
-    public func caller(service: ServiceCore<Connection, Delegate>) -> Client {
+    public func caller(service: ServiceCore<Connection, Delegate>) -> Callable {
         SingleShotCaller(core: service)
     }
 }
@@ -83,7 +83,7 @@ extension PersistentServiceFactory where Self: PersistentConnectionFactory {
         return service
     }
     
-    public func caller(service: ServiceCore<Connection, Delegate>) -> Client {
+    public func caller(service: ServiceCore<Connection, Delegate>) -> Callable {
         PersistentCaller(core: service)
     }
 }

@@ -16,15 +16,20 @@ public enum ServiceError: Swift.Error {
 
 public class Service<Core: ServiceCoreProtocol> {
     private var core: Core
-    private let caller: Client
+    private let caller: Callable
     
-    init(core: Core, caller: Client) {
+    init(core: Core, caller: Callable) {
         self.core = core
         self.caller = caller
     }
 }
 
 extension Service: Client {
+    public var debug: Bool {
+        get { core.debug }
+        set { core.debug = newValue }
+    }
+    
     public func call<Params: Encodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
         response callback: @escaping RequestCallback<Params, Res, Err>

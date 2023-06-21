@@ -16,11 +16,15 @@ public enum RequestError<Params: Encodable, Error: Decodable>: Swift.Error {
 
 public typealias RequestCallback<Params: Encodable, Response: Decodable, Error: Decodable> = Callback<Response, RequestError<Params, Error>>
 
-public protocol Client {
+public protocol Callable {
     func call<Params: Encodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
     )
+}
+
+public protocol Client: Callable {
+    var debug: Bool { get set }
 }
 
 extension ServiceCore {
