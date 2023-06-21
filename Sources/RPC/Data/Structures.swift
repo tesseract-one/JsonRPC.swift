@@ -16,25 +16,24 @@ public struct RequestEnvelope<P: Encodable>: Encodable {
     public let params: P
 }
 
-public struct ResponseError<T> {
+public struct ResponseError<T>: Error {
     public let code: Int
     public let message: String
-    
-    public let data:T?
+    public let data: T?
 }
 
-extension ResponseError: Decodable where T: Decodable {
-}
+extension ResponseError: Decodable where T: Decodable {}
+extension ResponseError: Encodable where T: Encodable {}
 
-extension ResponseError: Encodable where T: Encodable {
-}
-
-public struct ResponseEnvelope<R: Decodable, E: Decodable>: Decodable {
+public struct ResponseEnvelope<R, E> {
     public let jsonrpc: String
     public let id: RPCID
     public let result: R?
     public let error: ResponseError<E>?
 }
+
+extension ResponseEnvelope: Decodable where R: Decodable, E: Decodable {}
+extension ResponseEnvelope: Encodable where R: Encodable, E: Encodable {}
 
 public struct NotificationEnvelope<P: Decodable>: Decodable {
     public let jsonrpc: String
@@ -49,7 +48,7 @@ public struct EnvelopeHeader: Decodable {
 }
 
 public enum EnvelopeMetadata {
-    case request(id: RPCID, method: String)
+    case request(id: RPCID, method: String, jsonrpc: String)
     case response(id: RPCID)
     case notification(method: String)
     case unknown(version: String)
@@ -65,7 +64,7 @@ public extension EnvelopeHeader {
             
             if let id = self.id {
                 if let method = self.method {
-                    return .request(id: id, method: method)
+                    return .request(id: id, method: method, jsonrpc: self.jsonrpc)
                 } else {
                     return .response(id: id)
                 }
@@ -79,9 +78,3 @@ public extension EnvelopeHeader {
         }
     }
 }
-
-/*public struct EventEnvelope<M: Decodable>: Decodable {
-    public let jsonrpc: String
-    public let method: String
-    public let params: M
-}*/

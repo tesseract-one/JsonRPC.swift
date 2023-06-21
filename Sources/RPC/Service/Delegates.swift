@@ -24,7 +24,9 @@ public protocol NotificationDelegate: AnyObject {
 }
 
 public protocol ServerDelegate: AnyObject {
-//    func request(id: Int, method: String, params: Parsable, response: Callback<Encodable, Error>)
+    func request(id: Int, method: String,
+                 params: Parsable,
+                 response: Callback<AnyEncodable, ResponseError<AnyEncodable>>)
 }
 
 public class VoidDelegate {

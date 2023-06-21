@@ -10,7 +10,9 @@ import Foundation
 public protocol ServiceFactory: FactoryBase {
     associatedtype Delegate: AnyObject
     
-    func core(queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> ServiceCore<Connection, Delegate>
+    func core(
+        queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
+    ) -> ServiceCore<Connection, Delegate>
     func caller(service: ServiceCore<Connection, Delegate>) -> Client
 }
 
@@ -37,11 +39,13 @@ extension ServiceFactoryProvider: ServiceFactory {
 
 ///Single Shot Service
 
-public protocol SingleShotServiceFactory: ServiceFactory where Connection: SingleShotConnection, Delegate == VoidDelegate {
-}
+public protocol SingleShotServiceFactory: ServiceFactory
+    where Connection: SingleShotConnection, Delegate == VoidDelegate {}
 
 extension SingleShotServiceFactory where Self: SingleShotConnectionFactory {
-    public func core(queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> ServiceCore<Connection, Delegate> {
+    public func core(
+        queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
+    ) -> ServiceCore<Connection, Delegate> {
         var headers = Dictionary<String, String>()
         
         headers["Content-Type"] = encoder.contentType.rawValue
@@ -57,8 +61,8 @@ extension SingleShotServiceFactory where Self: SingleShotConnectionFactory {
 
 ///Persistent Service Factory
 
-public protocol PersistentServiceFactory: ServiceFactory where Connection: PersistentConnection, Delegate == AnyObject {
-}
+public protocol PersistentServiceFactory: ServiceFactory
+    where Connection: PersistentConnection, Delegate == AnyObject {}
 
 extension PersistentServiceFactory where Self: PersistentConnectionFactory {
     public func core(queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> ServiceCore<Connection, Delegate> {
@@ -86,18 +90,21 @@ extension PersistentServiceFactory where Self: PersistentConnectionFactory {
 
 /// Registrations with particular connection factories
 
-extension HttpConnectionFactory: SingleShotServiceFactory {
-}
+extension HttpConnectionFactory: SingleShotServiceFactory {}
 
-extension WsConnectionFactory: PersistentServiceFactory {
-}
+extension WsConnectionFactory: PersistentServiceFactory {}
 
-public func JsonRpc<Factory: ServiceFactory>(factory: Factory, queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> Service<ServiceCore<Factory.Connection, Factory.Delegate>> {
+public func JsonRpc<Factory: ServiceFactory>(
+    factory: Factory, queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
+) -> Service<ServiceCore<Factory.Connection, Factory.Delegate>> {
     let core = factory.core(queue: queue, encoder: encoder, decoder: decoder)
     let caller = factory.caller(service: core)
     return Service(core: core, caller: caller)
 }
 
-public func JsonRpc<Factory: ServiceFactory>(_ cfp: ServiceFactoryProvider<Factory>, queue: DispatchQueue, encoder: ContentEncoder = JSONEncoder.rpc, decoder:ContentDecoder = JSONDecoder.rpc) -> Service<ServiceCore<Factory.Connection, Factory.Delegate>> {
+public func JsonRpc<Factory: ServiceFactory>(
+    _ cfp: ServiceFactoryProvider<Factory>, queue: DispatchQueue,
+    encoder: ContentEncoder = JSONEncoder.rpc, decoder:ContentDecoder = JSONDecoder.rpc
+) -> Service<ServiceCore<Factory.Connection, Factory.Delegate>> {
     JsonRpc(factory: cfp.factory, queue: queue, encoder: encoder, decoder: decoder)
 }

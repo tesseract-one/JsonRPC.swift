@@ -1,5 +1,5 @@
 //
-//  Lock.swift
+//  Synced.swift
 //  
 //
 //  Created by Yehor Popovych on 30.12.2022.

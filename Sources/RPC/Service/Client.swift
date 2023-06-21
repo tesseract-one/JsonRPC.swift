@@ -55,7 +55,8 @@ public extension ServiceCore where Connection: SingleShotConnection {
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
         response callback: @escaping RequestCallback<Params, Res, Err>
     ) {
-        let encoded = serialize(id: nextId(), method: method, params: params, Err.self)
+        let id = nextId()
+        let encoded = serialize(id: id, method: method, params: params, Err.self)
         
         //return error if we can't encode
         guard case let .success(data) = encoded else {
@@ -65,9 +66,13 @@ public extension ServiceCore where Connection: SingleShotConnection {
             return
         }
         
+        let debug = self.debug
         let decoder = self.decoder
         
+        if debug { print("Request[\(id)]: \(String(data: data, encoding: .utf8) ?? "<error>")") }
+        
         connection.request(data: data) { response in
+            if debug { print("Response[\(id)]: \(response)") }
             let data:Result<Data, RequestError<Params, Err>> = response
                 .mapError(ServiceError.connection)
                 .mapError {.service(error: $0)}
@@ -104,10 +109,15 @@ public extension ServiceCore where Connection: PersistentConnection {
             return
         }
         
+        let debug = self.debug
         let decoder = self.decoder
+        
+        if debug { print("Request[\(id)]: \(String(data: data, encoding: .utf8) ?? "<error>")") }
         
         register(id: id) { data in
             let response = Self.deserialize(data: data, decoder: decoder, method: method, params: params, res, err)
+            
+            if debug { print("Response[\(id)]: \(response)") }
             
             self.queue.async { callback(response) }
         }
@@ -115,7 +125,7 @@ public extension ServiceCore where Connection: PersistentConnection {
         self.connection.send(data: data)
     }
     
-    func process(response: Data, id: RPCID, notFound:@escaping ()->Void) {
+    func process(response: Data, id: RPCID, notFound: @escaping () -> Void) {
         queue.async {
             self.remove(id: id) { closure in
                 guard let closure = closure else {

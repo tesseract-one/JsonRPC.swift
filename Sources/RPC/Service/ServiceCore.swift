@@ -11,6 +11,7 @@ public protocol ServiceCoreProtocol {
     associatedtype Connection
     associatedtype Delegate: AnyObject
     
+    var debug: Bool {get set}
     var delegate: Delegate? {get set}
 }
 
@@ -28,6 +29,7 @@ public class ServiceCore<Connection, Delegate: AnyObject>: ServiceCoreProtocol {
     
     let rpcId: Synced<UInt32>
     
+    public var debug: Bool
     public weak var delegate: Delegate?
     
     var responseClosures = Dictionary<RPCID, ResponseClosure>()
@@ -43,6 +45,7 @@ public class ServiceCore<Connection, Delegate: AnyObject>: ServiceCoreProtocol {
         self.decoder = decoder
         
         self.delegate = nil
+        self.debug = false
     }
     
     public func nextId() -> UInt32 {
