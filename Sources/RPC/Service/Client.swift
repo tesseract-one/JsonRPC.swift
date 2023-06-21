@@ -76,7 +76,6 @@ public extension ServiceCore where Connection: SingleShotConnection {
         if debug { print("Request[\(id)]: \(String(data: data, encoding: .utf8) ?? "<error>")") }
         
         connection.request(data: data) { response in
-            if debug { print("Response[\(id)]: \(response)") }
             let data:Result<Data, RequestError<Params, Err>> = response
                 .mapError(ServiceError.connection)
                 .mapError {.service(error: $0)}
@@ -87,6 +86,8 @@ public extension ServiceCore where Connection: SingleShotConnection {
                         return .failure(.empty)
                     }
             }
+            
+            if debug { print("Response[\(id)]: \(data.map { String(data: $0, encoding: .utf8) })") }
             
             let response = data.flatMap {
                 Self.deserialize(data: $0, decoder: decoder, method: method, params: params, res, err)
@@ -121,8 +122,6 @@ public extension ServiceCore where Connection: PersistentConnection {
         register(id: id) { data in
             let response = Self.deserialize(data: data, decoder: decoder, method: method, params: params, res, err)
             
-            if debug { print("Response[\(id)]: \(response)") }
-            
             self.queue.async { callback(response) }
         }
         
@@ -130,6 +129,8 @@ public extension ServiceCore where Connection: PersistentConnection {
     }
     
     func process(response: Data, id: RPCID, notFound: @escaping () -> Void) {
+        if debug { print("Response[\(id)]: \(String(data: response, encoding: .utf8) ?? "<error>")") }
+        
         queue.async {
             self.remove(id: id) { closure in
                 guard let closure = closure else {

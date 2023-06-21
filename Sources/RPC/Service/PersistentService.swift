@@ -55,7 +55,9 @@ extension ServiceCore where Connection: PersistentConnection, Delegate: AnyObjec
     
     func process(request method: String, id: RPCID, jsonrpc: String, data: Data) {
         let debug = self.debug
+        
         if debug { print("Server[\(id)]: \(String(data: data, encoding: .utf8) ?? "<error>")") }
+        
         let sendError = { (error: String, encoder: ContentEncoder) in
             let jserr = ResponseError<Nil>(code: -32603, message: error, data: nil)
             let env = ResponseEnvelope<AnyEncodable, Nil>(jsonrpc: jsonrpc, id: id,
@@ -63,6 +65,7 @@ extension ServiceCore where Connection: PersistentConnection, Delegate: AnyObjec
             self.connection.send(data: try! encoder.encode(env)) // Always should be encoded
             if debug { print("Server Error[\(id)]: \(error)") }
         }
+        
         guard let delegate = self.delegate as? ServerDelegate else {
             sendError("Server calls is not supported", self.encoder)
             return
@@ -70,6 +73,7 @@ extension ServiceCore where Connection: PersistentConnection, Delegate: AnyObjec
         
         let parsable = EnvelopedParsable(data: data, decoder: decoder)
         let encoder = self.encoder
+        
         delegate.request(id: Int(id), method: method, params: parsable) { response in
             let envelope: ResponseEnvelope<AnyEncodable, AnyEncodable>
             switch response {

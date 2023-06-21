@@ -32,7 +32,7 @@ public enum ConnectionMessage {
 public typealias ConnectionSink = (ConnectionMessage) -> Void
 
 public protocol PersistentConnection {
-    var sink: ConnectionSink {get set}
+    var sink: ConnectionSink { get set }
     
     func send(data: Data)
 }
