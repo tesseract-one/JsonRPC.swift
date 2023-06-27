@@ -22,9 +22,9 @@ jobs:
     steps:
       - name: Install latest curl
         run: |
-          wget http://ftp.debian.org/debian/pool/main/c/curl/libcurl4_7.88.1-10_amd64.deb
-          sudo dpkg -i libcurl4_7.88.1-10_amd64.deb
-          rm libcurl4_7.88.1-10_amd64.deb
+          curl -o curl.deb http://ftp.debian.org/debian/pool/main/c/curl/libcurl4_7.88.1-10_amd64.deb
+          sudo dpkg -i curl.deb
+          rm curl.deb
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build and Test
