@@ -21,7 +21,7 @@ jobs:
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
     steps:
       - name: Install latest curl
-        run: bash .github/build_curl.sh
+        run: ls -la && bash ./.github/build_curl.sh
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build and Test
