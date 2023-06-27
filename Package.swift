@@ -9,10 +9,7 @@ let package = Package(
     products: [
         .library(
             name: "JsonRPC",
-            targets: ["JsonRPC"]),
-        .library(
-            name: "JsonRPCSerializable",
-            targets: ["JsonRPCSerializable"]),
+            targets: ["JsonRPC"])
     ],
     dependencies: [
         .package(name: "Serializable", url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.3")
@@ -20,14 +17,9 @@ let package = Package(
     targets: [
         .target(
             name: "JsonRPC",
-            dependencies: [],
-            path: "Sources/RPC"),
-        .target(
-            name: "JsonRPCSerializable",
-            dependencies: ["JsonRPC", "Serializable"],
-            path: "Sources/Serializable"),
+            dependencies: []),
         .testTarget(
             name: "JsonRPCTests",
-            dependencies: ["JsonRPCSerializable"]),
+            dependencies: ["JsonRPC", "Serializable"])
     ]
 )

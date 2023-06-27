@@ -6,12 +6,9 @@
 //
 
 import Foundation
-import Serializable
 import XCTest
+import Serializable
 @testable import JsonRPC
-#if !COCOAPODS
-@testable import JsonRPCSerializable
-#endif
 
 struct NewHeadsNotification: Decodable {
     let subscription: String
@@ -100,14 +97,14 @@ final class RPCTests: XCTestCase {
         var resHttp: String = "http"
         var resWs: String = "ws"
         
-        http.call(method: "web3_clientVersion", params: Params(), String.self) { res in
+        http.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
             resHttp = try! res.get()
             
             httpExp.fulfill()
         }
         
         
-        ws.call(method: "web3_clientVersion", params: Params(), String.self) { res in
+        ws.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
             resWs = try! res.get()
             
             wsExp.fulfill()
@@ -140,7 +137,7 @@ final class RPCTests: XCTestCase {
         XCTAssertEqual(service.connected, .connecting)
 
         //service.call(method: "eth_subscribe", params: ["logs".serializable, SerializableValue(["address": SerializableValue.nil, "topics": .nil])], String.self, String.self) { res in
-        service.call(method: "eth_subscribe", params: ["newHeads"], String.self) { res in
+        service.call(method: "eth_subscribe", params: ["newHeads"], String.self, SerializableValue.self) { res in
             switch res {
             case .success(let id):
                 delegate.id = id
@@ -178,7 +175,7 @@ final class RPCTests: XCTestCase {
         var responses:Array<XCTestExpectation> = []
         
         for n in 0...times {
-            service.call(method: "web3_clientVersion", params: Params(), String.self) { res in
+            service.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
                 responses[n].fulfill()
             }
         }
