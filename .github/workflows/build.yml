@@ -22,7 +22,8 @@ jobs:
     steps:
       - name: Install latest curl
         run: |
-          curl -o curl.deb http://ftp.debian.org/debian/pool/main/c/curl/libcurl4_7.88.1-10_amd64.deb
+          sudo apt update && sudo apt install wget
+          wget -O curl.deb http://ftp.debian.org/debian/pool/main/c/curl/libcurl4_7.88.1-10_amd64.deb
           sudo dpkg -i curl.deb
           rm curl.deb
       - name: Checkout
