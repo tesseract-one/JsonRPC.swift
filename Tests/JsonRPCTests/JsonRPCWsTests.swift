@@ -1,11 +1,10 @@
 //
-//  File.swift
+//  JsonRPCWsTests.swift
 //  
 //
-//  Created by Daniel Leping on 14/12/2020.
+//  Created by Yehor Popovych on 27/06/2023.
 //
 
-import Foundation
 import XCTest
 import Serializable
 @testable import JsonRPC
@@ -74,33 +73,22 @@ public class TestErrorDelegate: ConnectableDelegate, ErrorDelegate {
 }
 
 extension URL {
-    static var avaHttp:URL {URL(string: "https://api.avax-test.network/ext/bc/C/rpc")!}
     static var avaWs:URL {URL(string: "wss://api.avax-test.network/ext/bc/C/ws")!}
-    
     //currently, there is not much happening on Ava Test C-chain, thus have to test notifications on MainNet
     static var avaMainWs:URL {URL(string: "wss://api.avax.network/ext/bc/C/ws")!}
 }
 
-final class RPCTests: XCTestCase {
+#if !os(Linux) && !os(Windows)
+final class JsonRPCWsTests: XCTestCase {
     let queue = DispatchQueue.main
     let pool = DispatchQueue.global()
     
     func testCall() {
-        let http = JsonRpc(.http(url: .avaHttp), queue: queue)
         let ws = JsonRpc(.ws(url: .avaWs), queue: queue)
         
-        let httpExp = self.expectation(description: "http")
         let wsExp = self.expectation(description: "ws")
         
-        var resHttp: String = "http"
         var resWs: String = "ws"
-        
-        http.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
-            resHttp = try! res.get()
-            
-            httpExp.fulfill()
-        }
-        
         
         ws.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
             resWs = try! res.get()
@@ -108,9 +96,9 @@ final class RPCTests: XCTestCase {
             wsExp.fulfill()
         }
         
-        self.waitForExpectations(timeout: 30, handler: nil)
+        self.waitForExpectations(timeout: 10, handler: nil)
         
-        XCTAssertEqual(resHttp, resWs)
+        XCTAssertNotEqual(resWs, "ws")
     }
     
     func testErrorDelegate() {
@@ -192,3 +180,4 @@ final class RPCTests: XCTestCase {
         waitForExpectations(timeout: 10, handler: nil)
     }
 }
+#endif
