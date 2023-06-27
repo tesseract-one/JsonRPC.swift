@@ -45,8 +45,6 @@ public class TestDelegate: ConnectableDelegate, NotificationDelegate, ErrorDeleg
     
         notified?.fulfill()
         notified = nil
-        
-        //print(notification.result)
     }
     
     public func error(_ error: ServiceError) {
@@ -136,7 +134,6 @@ final class RPCTests: XCTestCase {
         service.connect()
         XCTAssertEqual(service.connected, .connecting)
 
-        //service.call(method: "eth_subscribe", params: ["logs".serializable, SerializableValue(["address": SerializableValue.nil, "topics": .nil])], String.self, String.self) { res in
         service.call(method: "eth_subscribe", params: ["newHeads"], String.self, SerializableValue.self) { res in
             switch res {
             case .success(let id):

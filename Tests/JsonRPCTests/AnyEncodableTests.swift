@@ -1,5 +1,5 @@
 //
-//  CallParamsTests.swift
+//  AnyEncodableTests.swift
 //  
 //
 //  Created by Yehor Popovych on 16/06/2023.
@@ -9,7 +9,7 @@ import Foundation
 import XCTest
 @testable import JsonRPC
 
-final class CallParamsTests: XCTestCase {
+final class AnyEncodableTests: XCTestCase {
     let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dataEncodingStrategy = .base64

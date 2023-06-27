@@ -10,6 +10,10 @@
 
 ### Cross-platform JsonRPC client implementation with HTTP and WebSocket support
 
+## Linux WebSocket support
+WebSocket should work on Linux when this bug will be fixed: [Issue #4730](https://github.com/apple/swift-corelibs-foundation/issues/4730)
+You can use `0.1.1` version for now, which uses SwiftNIO for WebSocket.
+
 ## Getting started
 
 ### Installation
@@ -19,9 +23,7 @@
 Add the following dependency to your [Package.swift](https://github.com/apple/swift-package-manager/blob/master/Documentation/Usage.md#define-dependencies):
 
 ```swift
-.package(url: "https://github.com/tesseract-one/JsonRPC.swift.git", from: "0.1.0")
-// you can enable Serializable support for dynamic error parsing (add dependency to your target too)
-// .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0")
+.package(url: "https://github.com/tesseract-one/JsonRPC.swift.git", from: "0.2.0")
 ```
 
 Run `swift build` and build your app.
@@ -31,9 +33,7 @@ Run `swift build` and build your app.
 Add the following to your [Podfile](http://guides.cocoapods.org/using/the-podfile.html):
 
 ```rb
-pod 'JsonRPC.swift', '~> 0.1.0'
-# you can enable Serializable support for dynamic error parsing
-# pod 'JsonRPC.swift/Serializable', '~> 0.1.0'
+pod 'JsonRPC.swift', '~> 0.2.0'
 ```
 
 Then run `pod install`
@@ -117,13 +117,13 @@ rpc.connect()
 
 // Call subsribe method.
 // You can use Params() for array of Encodable parameters or provide own custom Encodable value.
-// You can omit last parameter if you have Serializable dependency. This will set error data to SerializableValue type.
-rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self) { res in
+rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self, SerializableValue.self) { res in
     print(try! res.get())
 }
 
 // Or with async/await (Swift 5.5+)
-let res = await rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self)
+let res = await rpc.call(method: "eth_subscribe", params: Params("newHeads"), String.self, SerializableValue.self)
+// or let res: String = await rpc.call(method: "eth_subscribe", params: Params("newHeads"), SerializableValue.self)
 print(res)
 ```
 
