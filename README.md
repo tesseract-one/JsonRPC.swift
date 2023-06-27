@@ -89,7 +89,7 @@ struct NewHeadsNotification: Decodable {
     let result: SerializableValue
 }
 
-class Delegate: ConnectableDelegate, ServerDelegate, ErrorDelegate {
+class Delegate: ConnectableDelegate, NotificationDelegate, ErrorDelegate {
   // Connectable Delegate. Will send connection updates
   public func state(_ state: ConnectableState) {
     print("Connection state: \(state)")
