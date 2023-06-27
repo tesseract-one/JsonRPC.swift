@@ -9,7 +9,7 @@ apt-get -yq remove curl libcurl4
 cd /tmp
 wget -O curl.tar.bz2 "${CURL_URL}"
 tar xfvj curl.tar.bz2
-cd curl
+cd curl*/
 ./configure --with-openssl --enable-websockets --prefix=/usr
 make install
 cd .. && rm -rf ./curl*
