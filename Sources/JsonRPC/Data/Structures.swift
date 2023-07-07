@@ -6,15 +6,48 @@
 //
 
 import Foundation
+import ConfigurationCodable
 
 public typealias RPCID = UInt32
 
-public struct RequestEnvelope<P: Encodable>: Encodable {
+public struct RequestEnvelope<P> {
     public let jsonrpc: String
     public let id: RPCID
     public let method: String
     public let params: P
 }
+
+extension RequestEnvelope: Encodable where P: Encodable {}
+extension RequestEnvelope: ConfigurationCodable.EncodableWithConfiguration
+    where P: ConfigurationCodable.EncodableWithConfiguration
+{
+    public typealias EncodingConfiguration = P.EncodingConfiguration
+    
+    public func encode(to encoder: Encoder, configuration: P.EncodingConfiguration) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(jsonrpc, forKey: .jsonrpc)
+        try container.encode(id, forKey: .id)
+        try container.encode(method, forKey: .method)
+        try container.encode(params, forKey: .params, configuration: configuration)
+    }
+}
+
+#if swift(>=5.5)
+@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+extension RequestEnvelope: Foundation.EncodableWithConfiguration
+    where P: Foundation.EncodableWithConfiguration
+{
+    public typealias EncodingConfiguration = P.EncodingConfiguration
+    
+    public func encode(to encoder: Encoder, configuration: P.EncodingConfiguration) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(jsonrpc, forKey: .jsonrpc)
+        try container.encode(id, forKey: .id)
+        try container.encode(method, forKey: .method)
+        try container.encode(params, forKey: .params, configuration: configuration)
+    }
+}
+#endif
 
 public struct ResponseError<T>: Error {
     public let code: Int
@@ -35,11 +68,94 @@ public struct ResponseEnvelope<R, E> {
 extension ResponseEnvelope: Decodable where R: Decodable, E: Decodable {}
 extension ResponseEnvelope: Encodable where R: Encodable, E: Encodable {}
 
-public struct NotificationEnvelope<P: Decodable>: Decodable {
+extension ResponseEnvelope: ConfigurationCodable.DecodableWithConfiguration
+    where R: ConfigurationCodable.DecodableWithConfiguration, E: Decodable
+{
+    public typealias DecodingConfiguration = R.DecodingConfiguration
+    public init(from decoder: Decoder, configuration: R.DecodingConfiguration) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        jsonrpc = try container.decode(String.self, forKey: .jsonrpc)
+        id = try container.decode(RPCID.self, forKey: .id)
+        result = try container.decodeIfPresent(R.self, forKey: .result, configuration: configuration)
+        error = try container.decodeIfPresent(ResponseError<E>.self, forKey: .error)
+    }
+}
+extension ResponseEnvelope: ConfigurationCodable.EncodableWithConfiguration
+    where R: ConfigurationCodable.EncodableWithConfiguration, E: Encodable
+{
+    public typealias EncodingConfiguration = R.EncodingConfiguration
+    public func encode(to encoder: Encoder, configuration: R.EncodingConfiguration) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(jsonrpc, forKey: .jsonrpc)
+        try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(result, forKey: .result, configuration: configuration)
+        try container.encodeIfPresent(error, forKey: .error)
+    }
+}
+
+#if swift(>=5.5)
+@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+extension ResponseEnvelope: Foundation.DecodableWithConfiguration
+    where R: Foundation.DecodableWithConfiguration, E: Decodable
+{
+    public typealias DecodingConfiguration = R.DecodingConfiguration
+    public init(from decoder: Decoder, configuration: R.DecodingConfiguration) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        jsonrpc = try container.decode(String.self, forKey: .jsonrpc)
+        id = try container.decode(RPCID.self, forKey: .id)
+        result = try container.decodeIfPresent(R.self, forKey: .result, configuration: configuration)
+        error = try container.decodeIfPresent(ResponseError<E>.self, forKey: .error)
+    }
+}
+@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+extension ResponseEnvelope: Foundation.EncodableWithConfiguration
+    where R: Foundation.EncodableWithConfiguration, E: Encodable
+{
+    public typealias EncodingConfiguration = R.EncodingConfiguration
+    public func encode(to encoder: Encoder, configuration: R.EncodingConfiguration) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(jsonrpc, forKey: .jsonrpc)
+        try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(result, forKey: .result, configuration: configuration)
+        try container.encodeIfPresent(error, forKey: .error)
+    }
+}
+#endif
+
+public struct NotificationEnvelope<P> {
     public let jsonrpc: String
     public let method: String
     public let params: P?
 }
+
+extension NotificationEnvelope: Decodable where P: Decodable {}
+
+extension NotificationEnvelope: ConfigurationCodable.DecodableWithConfiguration
+    where P: ConfigurationCodable.DecodableWithConfiguration
+{
+    public typealias DecodingConfiguration = P.DecodingConfiguration
+    public init(from decoder: Decoder, configuration: P.DecodingConfiguration) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        jsonrpc = try container.decode(String.self, forKey: .jsonrpc)
+        method = try container.decode(String.self, forKey: .method)
+        params = try container.decodeIfPresent(P.self, forKey: .params, configuration: configuration)
+    }
+}
+
+#if swift(>=5.5)
+@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+extension NotificationEnvelope: Foundation.DecodableWithConfiguration
+    where P: Foundation.DecodableWithConfiguration
+{
+    public typealias DecodingConfiguration = P.DecodingConfiguration
+    public init(from decoder: Decoder, configuration: P.DecodingConfiguration) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        jsonrpc = try container.decode(String.self, forKey: .jsonrpc)
+        method = try container.decode(String.self, forKey: .method)
+        params = try container.decodeIfPresent(P.self, forKey: .params, configuration: configuration)
+    }
+}
+#endif
 
 public struct EnvelopeHeader: Decodable {
     public let jsonrpc: String

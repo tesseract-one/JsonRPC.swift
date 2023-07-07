@@ -1,151 +1,61 @@
 //
-//  File.swift
+//  Client.swift
 //  
 //
 //  Created by Daniel Leping on 15/12/2020.
 //
 
 import Foundation
+import ConfigurationCodable
 
-public enum RequestError<Params: Encodable, Error: Decodable>: Swift.Error {
+public enum RequestError<Params, Error>: Swift.Error {
     case service(error: ServiceError)
     case empty //empty body has been returned in reply
     case reply(method: String, params: Params, error: ResponseError<Error>)
     case custom(description: String, cause: Swift.Error?)
 }
 
-public typealias RequestCallback<Params: Encodable, Response: Decodable, Error: Decodable> = Callback<Response, RequestError<Params, Error>>
+public typealias RequestCallback<Params, Response, Error> = Callback<Response, RequestError<Params, Error>>
 
 public protocol Callable {
     func call<Params: Encodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
     )
+    
+    func call<Params, Res: Decodable, Err: Decodable>(
+        method: String, params: Params,
+        configuration: Params.EncodingConfiguration,
+        _ res: Res.Type, _ err: Err.Type,
+        response: @escaping RequestCallback<Params, Res, Err>
+    ) where Params: ConfigurationCodable.EncodableWithConfiguration
+    
+    func call<Params: Encodable, Res, Err: Decodable>(
+        method: String, params: Params,
+        configuration: Res.DecodingConfiguration,
+        _ res: Res.Type, _ err: Err.Type,
+        response: @escaping RequestCallback<Params, Res, Err>
+    ) where Res: ConfigurationCodable.DecodableWithConfiguration
+    
+    func call<Params, Res, Err: Decodable>(
+        method: String, params: Params,
+        encoding econfiguration: Params.EncodingConfiguration,
+        decoding dconfiguration: Res.DecodingConfiguration,
+        _ res: Res.Type, _ err: Err.Type,
+        response: @escaping RequestCallback<Params, Res, Err>
+    ) where Params: ConfigurationCodable.EncodableWithConfiguration,
+            Res: ConfigurationCodable.DecodableWithConfiguration
+    
+    // TODO: Add Foundation based calls for Xcode 15+ and Swift 5.9+
 }
 
 public protocol Client: Callable {
     var debug: Bool { get set }
 }
 
-extension ServiceCore {
-    static func deserialize<Res: Decodable, Params: Encodable, Err: Decodable>(data: Data, decoder: ContentDecoder, method: String, params: Params, _ res: Res.Type, _ err: Err.Type) -> Result<Res, RequestError<Params, Err>> {
-        let envelope:Result<ResponseEnvelope<Res, Err>, ServiceError> = decoder.tryDecode(ResponseEnvelope<Res, Err>.self, from: data).mapError {
-            .codec(cause: $0)
-        }
-        
-        let response:Result<Res, RequestError<Params, Err>> = envelope.mapError { e in
-            .service(error: e)
-        }.flatMap { envelope in
-             guard let data = envelope.result else {
-                 guard let error = envelope.error else {
-                     return .failure(.empty)
-                 }
-                 return .failure(.reply(method: method, params: params, error: error))
-             }
-             return .success(data)
-         }
-        
-        return response
-    }
-    
-    func serialize<Params: Encodable, Err: Decodable>(id: RPCID, method: String, params: Params, _ err: Err.Type) -> Result<Data, RequestError<Params, Err>> {
-        let request = RequestEnvelope(jsonrpc: "2.0", id: id, method: method, params: params)
-        return encoder.tryEncode(request).mapError(ServiceError.codec).mapError(RequestError<Params, Err>.service)
-    }
-}
-
-public extension ServiceCore where Connection: SingleShotConnection {
-    func call<Params: Encodable, Res: Decodable, Err: Decodable>(
-        method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
-        response callback: @escaping RequestCallback<Params, Res, Err>
-    ) {
-        let id = nextId()
-        let encoded = serialize(id: id, method: method, params: params, Err.self)
-        
-        //return error if we can't encode
-        guard case let .success(data) = encoded else {
-            let dummy:Res? = nil
-            //convert to callback result
-            self.queue.async { callback(encoded.map { _ in dummy!}) }
-            return
-        }
-        
-        let debug = self.debug
-        let decoder = self.decoder
-        
-        if debug { print("Request[\(id)]: \(String(data: data, encoding: .utf8) ?? "<error>")") }
-        
-        connection.request(data: data) { response in
-            let data:Result<Data, RequestError<Params, Err>> = response
-                .mapError(ServiceError.connection)
-                .mapError {.service(error: $0)}
-                .flatMap { data in
-                    if let data = data {
-                        return .success(data)
-                    } else {
-                        return .failure(.empty)
-                    }
-            }
-            
-            if debug { print("Response[\(id)]: \(data.map { String(data: $0, encoding: .utf8) })") }
-            
-            let response = data.flatMap {
-                Self.deserialize(data: $0, decoder: decoder, method: method, params: params, res, err)
-            }
-            
-            self.queue.async { callback(response) }
-        }
-    }
-}
-
-public extension ServiceCore where Connection: PersistentConnection {
-    func call<Params: Encodable, Res: Decodable, Err: Decodable>(
-        method: String, params: Params, _ res: Res.Type, _ err: Err.Type,
-        response callback: @escaping RequestCallback<Params, Res, Err>
-    ) {
-        let id = nextId()
-        let encoded = serialize(id: id, method: method, params: params, Err.self)
-        
-        //return error if we can't encode
-        guard case let .success(data) = encoded else {
-            let dummy:Res? = nil
-            //convert to callback result
-            self.queue.async { callback(encoded.map { _ in dummy!}) }
-            return
-        }
-        
-        let debug = self.debug
-        let decoder = self.decoder
-        
-        if debug { print("Request[\(id)]: \(String(data: data, encoding: .utf8) ?? "<error>")") }
-        
-        register(id: id) { data in
-            let response = Self.deserialize(data: data, decoder: decoder, method: method, params: params, res, err)
-            
-            self.queue.async { callback(response) }
-        }
-        
-        self.connection.send(data: data)
-    }
-    
-    func process(response: Data, id: RPCID, notFound: @escaping () -> Void) {
-        if debug { print("Response[\(id)]: \(String(data: response, encoding: .utf8) ?? "<error>")") }
-        
-        queue.async {
-            self.remove(id: id) { closure in
-                guard let closure = closure else {
-                    notFound()
-                    return
-                }
-                closure(response)
-            }
-        }
-    }
-}
-
 #if swift(>=5.5)
-extension Client {
-    public func call<Params: Encodable, Res: Decodable, Err: Decodable>(
+public extension Client {
+    func call<Params: Encodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type
     ) async throws -> Res {
         try await withUnsafeThrowingContinuation { cont in
@@ -153,11 +63,88 @@ extension Client {
         }
     }
     
-    public func call<Params: Encodable, Res: Decodable, Err: Decodable>(
+    func call<Params: Encodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params, _ err: Err.Type
     ) async throws -> Res {
         try await withUnsafeThrowingContinuation { cont in
             self.call(method: method, params: params, Res.self, err) { cont.resume(with: $0) }
+        }
+    }
+    
+    func call<Params, Res: Decodable, Err: Decodable>(
+        method: String, params: Params,
+        configuration: Params.EncodingConfiguration,
+        _ res: Res.Type, _ err: Err.Type
+    ) async throws -> Res where Params: ConfigurationCodable.EncodableWithConfiguration {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params, configuration: configuration, res, err) {
+                cont.resume(with: $0)
+            }
+        }
+    }
+    
+    func call<Params, Res: Decodable, Err: Decodable>(
+        method: String, params: Params,
+        configuration: Params.EncodingConfiguration, _ err: Err.Type
+    ) async throws -> Res where Params: ConfigurationCodable.EncodableWithConfiguration {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params, configuration: configuration, Res.self, err) {
+                cont.resume(with: $0)
+            }
+        }
+    }
+    
+    func call<Params: Encodable, Res, Err: Decodable>(
+        method: String, params: Params,
+        configuration: Res.DecodingConfiguration,
+        _ res: Res.Type, _ err: Err.Type
+    ) async throws -> Res where Res: ConfigurationCodable.DecodableWithConfiguration {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params, configuration: configuration, res, err) {
+                cont.resume(with: $0)
+            }
+        }
+    }
+    
+    func call<Params: Encodable, Res, Err: Decodable>(
+        method: String, params: Params,
+        configuration: Res.DecodingConfiguration, _ err: Err.Type
+    ) async throws -> Res where Res: ConfigurationCodable.DecodableWithConfiguration {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params, configuration: configuration, Res.self, err) {
+                cont.resume(with: $0)
+            }
+        }
+    }
+    
+    func call<Params, Res, Err: Decodable>(
+        method: String, params: Params,
+        encoding econfiguration: Params.EncodingConfiguration,
+        decoding dconfiguration: Res.DecodingConfiguration,
+        _ res: Res.Type, _ err: Err.Type
+    ) async throws ->  Res where
+        Params: ConfigurationCodable.EncodableWithConfiguration,
+        Res: ConfigurationCodable.DecodableWithConfiguration
+    {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params,
+                      encoding: econfiguration,
+                      decoding: dconfiguration, res, err) { cont.resume(with: $0) }
+        }
+    }
+    
+    func call<Params, Res, Err: Decodable>(
+        method: String, params: Params,
+        encoding econfiguration: Params.EncodingConfiguration,
+        decoding dconfiguration: Res.DecodingConfiguration, _ err: Err.Type
+    ) async throws ->  Res where
+        Params: ConfigurationCodable.EncodableWithConfiguration,
+        Res: ConfigurationCodable.DecodableWithConfiguration
+    {
+        try await withUnsafeThrowingContinuation { cont in
+            self.call(method: method, params: params,
+                      encoding: econfiguration,
+                      decoding: dconfiguration, Res.self, err) { cont.resume(with: $0) }
         }
     }
 }

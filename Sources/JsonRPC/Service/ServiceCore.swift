@@ -20,7 +20,7 @@ public protocol ContentCodersProvider {
     var contentEncoder: ContentEncoder { get set }
 }
 
-public class ServiceCore<Connection, Delegate: AnyObject>: ServiceCoreProtocol {
+public final class ServiceCore<Connection, Delegate: AnyObject>: ServiceCoreProtocol {
     var queue: DispatchQueue
     var connection: Connection
     
@@ -57,17 +57,9 @@ public class ServiceCore<Connection, Delegate: AnyObject>: ServiceCoreProtocol {
 }
 
 extension ServiceCore: Connectable where Connection: Connectable {
-    public var connected: ConnectableState {
-        connection.connected
-    }
-    
-    public func connect() {
-        connection.connect()
-    }
-    
-    public func disconnect() {
-        connection.disconnect()
-    }
+    public var connected: ConnectableState { connection.connected }
+    public func connect() { connection.connect() }
+    public func disconnect() { connection.disconnect() }
 }
 
 extension ServiceCore: ContentCodersProvider {
@@ -75,7 +67,6 @@ extension ServiceCore: ContentCodersProvider {
         get { decoder }
         set { decoder = newValue }
     }
-    
     public var contentEncoder: ContentEncoder {
         get { encoder }
         set { encoder = newValue }

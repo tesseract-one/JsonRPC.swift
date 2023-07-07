@@ -57,6 +57,7 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
     private let queue: DispatchQueue
     private let connectTimeout: TimeInterval
     private let pingInterval: TimeInterval?
+    private let maximumMessageSize: Int?
     private var state: Compartment<State>
     private let syncQueue: DispatchQueue
     // Can be not protected because used only in syncQueue
@@ -74,6 +75,7 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
                 connectTimeout: TimeInterval,
                 pingInterval: TimeInterval?,
                 pool: DispatchQueue,
+                maximumMessageSize: Int?,
                 sink: @escaping ConnectionSink
     ) {
         self.url = url
@@ -82,6 +84,7 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
         self.queue = queue
         self.connectTimeout = connectTimeout
         self.pingInterval = pingInterval
+        self.maximumMessageSize = maximumMessageSize
         self.pingTimer = nil
         let delegate = URLSessionWebSocketDelegateProxyWrapper(wrapped: session.delegate,
                                                                delegateQueue: session.delegateQueue)
@@ -119,9 +122,10 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
                 req.addValue(v, forHTTPHeaderField: k)
             }
             state.task = self.urlSession.webSocketTask(with: req)
+            state.task!.maximumMessageSize = self.maximumMessageSize ?? state.task!.maximumMessageSize
             state.connected = .connecting
             self.flush(state: .connecting)
-            state.task?.resume()
+            state.task!.resume()
         }
     }
     
@@ -268,6 +272,7 @@ public struct WsConnectionFactory : PersistentConnectionFactory {
     public let connectTimeout: TimeInterval
     public let pingInterval: TimeInterval?
     public let pool: DispatchQueue
+    public let maximumMessageSize: Int?
     
     public func connection(queue: DispatchQueue, sink: @escaping ConnectionSink) -> Connection {
         WsConnection(
@@ -278,6 +283,7 @@ public struct WsConnectionFactory : PersistentConnectionFactory {
             connectTimeout: connectTimeout,
             pingInterval: pingInterval,
             pool: pool,
+            maximumMessageSize: maximumMessageSize,
             sink: sink
         )
     }
@@ -290,14 +296,16 @@ extension ConnectionFactoryProvider where Factory == WsConnectionFactory {
         headers: [(key: String, value: String)] = [],
         connectTimeout: TimeInterval = 20,
         pingInterval: TimeInterval? = nil,
-        pool: DispatchQueue = .global(qos: .userInteractive)
+        pool: DispatchQueue = .global(qos: .userInteractive),
+        maximumMessageSize: Int? = nil
     ) -> Self {
         return Self(factory: WsConnectionFactory(
             url: url, autoconnect: autoconnect,
             session: session, headers: headers,
             connectTimeout: connectTimeout,
             pingInterval: pingInterval,
-            pool: pool
+            pool: pool,
+            maximumMessageSize: maximumMessageSize
         ))
     }
 }

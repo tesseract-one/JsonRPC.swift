@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ConfigurationCodable
 
 public struct AnyEncodable: Encodable {
     public let encoder: (Encoder) throws -> Void
@@ -17,6 +18,12 @@ public struct AnyEncodable: Encodable {
         }
     }
     
+    public init<T: ConfigurationCodable.EncodableWithConfiguration>(
+        _ value: T, configuration: T.EncodingConfiguration
+    ) {
+        self.encoder = { try value.encode(to: $0, configuration: configuration) }
+    }
+    
     public func encode(to encoder: Encoder) throws {
         try self.encoder(encoder)
     }
@@ -24,4 +31,10 @@ public struct AnyEncodable: Encodable {
 
 public extension Encodable {
     var any: AnyEncodable { AnyEncodable(self) }
+}
+
+public extension ConfigurationCodable.EncodableWithConfiguration {
+    func any(configuration: EncodingConfiguration) -> AnyEncodable {
+        AnyEncodable(self, configuration: configuration)
+    }
 }

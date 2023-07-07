@@ -13,6 +13,7 @@ public protocol ServiceFactory: FactoryBase {
     func core(
         queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
     ) -> ServiceCore<Connection, Delegate>
+    
     func caller(service: ServiceCore<Connection, Delegate>) -> Callable
 }
 
@@ -65,7 +66,9 @@ public protocol PersistentServiceFactory: ServiceFactory
     where Connection: PersistentConnection, Delegate == AnyObject {}
 
 extension PersistentServiceFactory where Self: PersistentConnectionFactory {
-    public func core(queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> ServiceCore<Connection, Delegate> {
+    public func core(
+        queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
+    ) -> ServiceCore<Connection, Delegate> {
         var this: WeakRef<ServiceCore<Connection, Delegate>> = WeakRef(ref: nil)
             
         let conn = self.connection(queue: queue) { message in
@@ -76,7 +79,8 @@ extension PersistentServiceFactory where Self: PersistentConnectionFactory {
             this.process(message: message)
         }
         
-        let service: ServiceCore<Connection, Delegate> = ServiceCore(connection: conn, queue: queue, encoder: encoder, decoder: decoder)
+        let service: ServiceCore<Connection, Delegate> = ServiceCore(connection: conn, queue: queue,
+                                                                     encoder: encoder, decoder: decoder)
         //for our sink closure
         this.ref = service
         

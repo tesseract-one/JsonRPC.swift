@@ -1,11 +1,12 @@
 //
-//  File.swift
+//  JSON.swift
 //  
 //
 //  Created by Daniel Leping on 14/12/2020.
 //
 
 import Foundation
+import ConfigurationCodable
 
 extension Formatter {
     public static let iso8601withFractionalSeconds: DateFormatter = {
@@ -60,7 +61,7 @@ extension JSONEncoder.DataEncodingStrategy {
     }
 }
 
-extension JSONEncoder: ContentEncoder {    
+extension JSONEncoder: ContentEncoder {
     public var contentType: ContentType {
         .json
     }

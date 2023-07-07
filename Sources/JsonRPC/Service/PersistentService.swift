@@ -126,4 +126,17 @@ extension ServiceCore where Connection: PersistentConnection, Delegate: AnyObjec
         case .state(let state): process(state: state)
         }
     }
+    
+    func process(response: Data, id: RPCID, notFound: @escaping () -> Void) {
+        if debug { print("Response[\(id)]: \(String(data: response, encoding: .utf8) ?? "<error>")") }
+        queue.async {
+            self.remove(id: id) { closure in
+                guard let closure = closure else {
+                    notFound()
+                    return
+                }
+                closure(response)
+            }
+        }
+    }
 }
