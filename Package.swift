@@ -12,13 +12,13 @@ let package = Package(
             targets: ["JsonRPC"])
     ],
     dependencies: [
-        .package(url: "https://github.com/tesseract-one/ConfigurationCodable.swift.git", .branch("main")),
+        .package(url: "https://github.com/tesseract-one/ContextCodable.swift.git", .upToNextMinor(from: "0.1.0")),
         .package(url: "https://github.com/tesseract-one/Serializable.swift.git", .upToNextMinor(from: "0.2.3"))
     ],
     targets: [
         .target(
             name: "JsonRPC",
-            dependencies: [.product(name: "ConfigurationCodable", package: "ConfigurationCodable.swift")]),
+            dependencies: [.product(name: "ContextCodable", package: "ContextCodable.swift")]),
         .testTarget(
             name: "JsonRPCTests",
             dependencies: [

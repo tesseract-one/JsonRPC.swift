@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import ConfigurationCodable
+import ContextCodable
 
 extension ServiceCore {
     private static func mapEnvelope<Res, Params, Err>(
@@ -25,15 +25,13 @@ extension ServiceCore {
              }
     }
     
-    static func deserialize<Res, Params, Err>(
+    static func deserialize<Res: ContextDecodable, Params, Err: Decodable>(
         data: Data, decoder: ContentDecoder,
-        configuration: Res.DecodingConfiguration,
+        context: Res.DecodingContext,
         method: String, params: Params, _ res: Res.Type, _ err: Err.Type
-    ) -> Result<Res, RequestError<Params, Err>> where
-        Res: ConfigurationCodable.DecodableWithConfiguration, Err: Decodable
-    {
+    ) -> Result<Res, RequestError<Params, Err>> {
         let envelope = decoder.tryDecode(
-            ResponseEnvelope<Res, Err>.self, from: data, configuration: configuration
+            ResponseEnvelope<Res, Err>.self, from: data, context: context
         )
         return mapEnvelope(method: method, params: params, response: envelope)
     }
@@ -53,15 +51,13 @@ extension ServiceCore {
         return encoder.tryEncode(request).mapError { .service(error: .codec(cause: $0)) }
     }
     
-    func serialize<Params, Err>(
+    func serialize<Params: ContextEncodable, Err>(
         id: RPCID, method: String, params: Params,
-        configuration: Params.EncodingConfiguration,
+        context: Params.EncodingContext,
         _ err: Err.Type
-    ) -> Result<Data, RequestError<Params, Err>> where
-        Params: ConfigurationCodable.EncodableWithConfiguration
-    {
+    ) -> Result<Data, RequestError<Params, Err>> {
         let request = RequestEnvelope(jsonrpc: "2.0", id: id, method: method, params: params)
-        return encoder.tryEncode(request, configuration: configuration)
+        return encoder.tryEncode(request, context: context)
             .mapError { .service(error: .codec(cause: $0)) }
     }
 }

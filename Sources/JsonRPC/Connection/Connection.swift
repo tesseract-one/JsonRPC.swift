@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Connection.swift
 //  
 //
 //  Created by Daniel Leping on 14/12/2020.

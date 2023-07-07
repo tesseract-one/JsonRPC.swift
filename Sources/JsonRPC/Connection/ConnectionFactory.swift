@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  ConnectionFactory.swift
 //  
 //
 //  Created by Daniel Leping on 16/12/2020.
@@ -7,8 +7,7 @@
 
 import Foundation
 
-public protocol ConnectionFactory: FactoryBase {
-}
+public protocol ConnectionFactory: FactoryBase {}
 
 public protocol SingleShotConnectionFactory: ConnectionFactory where Connection: SingleShotConnection {
     func connection(queue: DispatchQueue, headers: Dictionary<String, String>) -> Connection

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import ConfigurationCodable
+import ContextCodable
 
 public extension ServiceCore where Connection: PersistentConnection {
     private func call<Params, Res, Err>(
@@ -44,14 +44,14 @@ public extension ServiceCore where Connection: PersistentConnection {
         }
     }
     
-    func call<Params, Res: Decodable, Err: Decodable>(
+    func call<Params: ContextEncodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Params.EncodingConfiguration,
+        context: Params.EncodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response callback: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration {
+    ) {
         let id = nextId()
-        let encoded = serialize(id: id, method: method, params: params, configuration: configuration, Err.self)
+        let encoded = serialize(id: id, method: method, params: params, context: context, Err.self)
         
         let decoder = self.decoder
         call(id: id, encoded: encoded, response: callback) { data in
@@ -59,37 +59,35 @@ public extension ServiceCore where Connection: PersistentConnection {
         }
     }
     
-    func call<Params: Encodable, Res, Err: Decodable>(
+    func call<Params: Encodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Res.DecodingConfiguration,
+        context: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response callback: @escaping RequestCallback<Params, Res, Err>
-    ) where Res: ConfigurationCodable.DecodableWithConfiguration {
+    ) {
         let id = nextId()
         let encoded = serialize(id: id, method: method, params: params, Err.self)
         
         let decoder = self.decoder
         call(id: id, encoded: encoded, response: callback) { data in
-            Self.deserialize(data: data, decoder: decoder, configuration: configuration,
+            Self.deserialize(data: data, decoder: decoder, context: context,
                              method: method, params: params, res, err)
         }
     }
     
-    func call<Params, Res, Err: Decodable>(
+    func call<Params: ContextEncodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        encoding econfiguration: Params.EncodingConfiguration,
-        decoding dconfiguration: Res.DecodingConfiguration,
+        encoding econtext: Params.EncodingContext,
+        decoding dcontext: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response callback: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration,
-            Res: ConfigurationCodable.DecodableWithConfiguration
-    {
+    ) {
         let id = nextId()
-        let encoded = serialize(id: id, method: method, params: params, configuration: econfiguration, Err.self)
+        let encoded = serialize(id: id, method: method, params: params, context: econtext, Err.self)
         
         let decoder = self.decoder
         call(id: id, encoded: encoded, response: callback) { data in
-            Self.deserialize(data: data, decoder: decoder, configuration: dconfiguration,
+            Self.deserialize(data: data, decoder: decoder, context: dcontext,
                              method: method, params: params, res, err)
         }
     }

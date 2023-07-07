@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import ConfigurationCodable
+import ContextCodable
 
 struct SingleShotCaller<Connection: SingleShotConnection, Delegate: AnyObject> {
     let core: ServiceCore<Connection, Delegate>
@@ -20,40 +20,38 @@ extension SingleShotCaller: Callable {
         core.call(method: method, params: params, res, err, response: callback)
     }
     
-    func call<Params, Res: Decodable, Err: Decodable>(
+    func call<Params: ContextEncodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Params.EncodingConfiguration,
+        context: Params.EncodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration {
+    ) {
         core.call(method: method, params: params,
-                  configuration: configuration,
+                  context: context,
                   res, err, response: response)
     }
     
-    func call<Params: Encodable, Res, Err: Decodable>(
+    func call<Params: Encodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Res.DecodingConfiguration,
+        context: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Res: ConfigurationCodable.DecodableWithConfiguration {
+    ) {
         core.call(method: method, params: params,
-                  configuration: configuration,
+                  context: context,
                   res, err, response: response)
     }
     
-    func call<Params, Res, Err: Decodable>(
+    func call<Params: ContextEncodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        encoding econfiguration: Params.EncodingConfiguration,
-        decoding dconfiguration: Res.DecodingConfiguration,
+        encoding econtext: Params.EncodingContext,
+        decoding dcontext: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration,
-            Res: ConfigurationCodable.DecodableWithConfiguration
-    {
+    ) {
         core.call(method: method, params: params,
-                  encoding: econfiguration,
-                  decoding: dconfiguration,
+                  encoding: econtext,
+                  decoding: dcontext,
                   res, err, response: response)
     }
 }
@@ -70,40 +68,38 @@ extension PersistentCaller: Callable {
         core.call(method: method, params: params, res, err, response: callback)
     }
     
-    func call<Params, Res: Decodable, Err: Decodable>(
+    func call<Params: ContextEncodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Params.EncodingConfiguration,
+        context: Params.EncodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration {
+    ) {
         core.call(method: method, params: params,
-                  configuration: configuration,
+                  context: context,
                   res, err, response: response)
     }
     
-    func call<Params: Encodable, Res, Err: Decodable>(
+    func call<Params: Encodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Res.DecodingConfiguration,
+        context: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Res: ConfigurationCodable.DecodableWithConfiguration {
+    ) {
         core.call(method: method, params: params,
-                  configuration: configuration,
+                  context: context,
                   res, err, response: response)
     }
     
-    func call<Params, Res, Err: Decodable>(
+    func call<Params: ContextEncodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        encoding econfiguration: Params.EncodingConfiguration,
-        decoding dconfiguration: Res.DecodingConfiguration,
+        encoding econtext: Params.EncodingContext,
+        decoding dcontext: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration,
-            Res: ConfigurationCodable.DecodableWithConfiguration
-    {
+    ) {
         core.call(method: method, params: params,
-                  encoding: econfiguration,
-                  decoding: dconfiguration,
+                  encoding: econtext,
+                  decoding: dcontext,
                   res, err, response: response)
     }
 }

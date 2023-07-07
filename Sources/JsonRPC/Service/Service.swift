@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import ConfigurationCodable
+import ContextCodable
 
 public enum ServiceError: Swift.Error {
     case connection(cause: ConnectionError)
@@ -38,40 +38,38 @@ extension Service: Client {
         caller.call(method: method, params: params, res, err, response: callback)
     }
     
-    public func call<Params, Res: Decodable, Err: Decodable>(
+    public func call<Params: ContextEncodable, Res: Decodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Params.EncodingConfiguration,
+        context: Params.EncodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration {
+    ) {
         caller.call(method: method, params: params,
-                    configuration: configuration,
+                    context: context,
                     res, err, response: response)
     }
     
-    public func call<Params: Encodable, Res, Err: Decodable>(
+    public func call<Params: Encodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        configuration: Res.DecodingConfiguration,
+        context: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Res: ConfigurationCodable.DecodableWithConfiguration {
+    ) {
         caller.call(method: method, params: params,
-                    configuration: configuration,
+                    context: context,
                     res, err, response: response)
     }
     
-    public func call<Params, Res, Err: Decodable>(
+    public func call<Params: ContextEncodable, Res: ContextDecodable, Err: Decodable>(
         method: String, params: Params,
-        encoding econfiguration: Params.EncodingConfiguration,
-        decoding dconfiguration: Res.DecodingConfiguration,
+        encoding econtext: Params.EncodingContext,
+        decoding dcontext: Res.DecodingContext,
         _ res: Res.Type, _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
-    ) where Params: ConfigurationCodable.EncodableWithConfiguration,
-            Res: ConfigurationCodable.DecodableWithConfiguration
-    {
+    ) {
         caller.call(method: method, params: params,
-                    encoding: econfiguration,
-                    decoding: dconfiguration,
+                    encoding: econtext,
+                    decoding: dcontext,
                     res, err, response: response)
     }
 }

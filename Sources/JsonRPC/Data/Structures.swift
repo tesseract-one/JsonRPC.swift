@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import ConfigurationCodable
+import ContextCodable
 
 public typealias RPCID = UInt32
 
@@ -18,17 +18,15 @@ public struct RequestEnvelope<P> {
 }
 
 extension RequestEnvelope: Encodable where P: Encodable {}
-extension RequestEnvelope: ConfigurationCodable.EncodableWithConfiguration
-    where P: ConfigurationCodable.EncodableWithConfiguration
-{
-    public typealias EncodingConfiguration = P.EncodingConfiguration
+extension RequestEnvelope: ContextEncodable where P: ContextEncodable {
+    public typealias EncodingContext = P.EncodingContext
     
-    public func encode(to encoder: Encoder, configuration: P.EncodingConfiguration) throws {
+    public func encode(to encoder: Encoder, context: EncodingContext) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(jsonrpc, forKey: .jsonrpc)
         try container.encode(id, forKey: .id)
         try container.encode(method, forKey: .method)
-        try container.encode(params, forKey: .params, configuration: configuration)
+        try container.encode(params, forKey: .params, context: context)
     }
 }
 
@@ -68,27 +66,23 @@ public struct ResponseEnvelope<R, E> {
 extension ResponseEnvelope: Decodable where R: Decodable, E: Decodable {}
 extension ResponseEnvelope: Encodable where R: Encodable, E: Encodable {}
 
-extension ResponseEnvelope: ConfigurationCodable.DecodableWithConfiguration
-    where R: ConfigurationCodable.DecodableWithConfiguration, E: Decodable
-{
-    public typealias DecodingConfiguration = R.DecodingConfiguration
-    public init(from decoder: Decoder, configuration: R.DecodingConfiguration) throws {
+extension ResponseEnvelope: ContextDecodable where R: ContextDecodable, E: Decodable {
+    public typealias DecodingContext = R.DecodingContext
+    public init(from decoder: Decoder, context: DecodingContext) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         jsonrpc = try container.decode(String.self, forKey: .jsonrpc)
         id = try container.decode(RPCID.self, forKey: .id)
-        result = try container.decodeIfPresent(R.self, forKey: .result, configuration: configuration)
+        result = try container.decodeIfPresent(R.self, forKey: .result, context: context)
         error = try container.decodeIfPresent(ResponseError<E>.self, forKey: .error)
     }
 }
-extension ResponseEnvelope: ConfigurationCodable.EncodableWithConfiguration
-    where R: ConfigurationCodable.EncodableWithConfiguration, E: Encodable
-{
-    public typealias EncodingConfiguration = R.EncodingConfiguration
-    public func encode(to encoder: Encoder, configuration: R.EncodingConfiguration) throws {
+extension ResponseEnvelope: ContextEncodable where R: ContextEncodable, E: Encodable {
+    public typealias EncodingContext = R.EncodingContext
+    public func encode(to encoder: Encoder, context: EncodingContext) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(jsonrpc, forKey: .jsonrpc)
         try container.encode(id, forKey: .id)
-        try container.encodeIfPresent(result, forKey: .result, configuration: configuration)
+        try container.encodeIfPresent(result, forKey: .result, context: context)
         try container.encodeIfPresent(error, forKey: .error)
     }
 }
@@ -130,15 +124,13 @@ public struct NotificationEnvelope<P> {
 
 extension NotificationEnvelope: Decodable where P: Decodable {}
 
-extension NotificationEnvelope: ConfigurationCodable.DecodableWithConfiguration
-    where P: ConfigurationCodable.DecodableWithConfiguration
-{
-    public typealias DecodingConfiguration = P.DecodingConfiguration
-    public init(from decoder: Decoder, configuration: P.DecodingConfiguration) throws {
+extension NotificationEnvelope: ContextDecodable where P: ContextDecodable {
+    public typealias DecodingContext = P.DecodingContext
+    public init(from decoder: Decoder, context: DecodingContext) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         jsonrpc = try container.decode(String.self, forKey: .jsonrpc)
         method = try container.decode(String.self, forKey: .method)
-        params = try container.decodeIfPresent(P.self, forKey: .params, configuration: configuration)
+        params = try container.decodeIfPresent(P.self, forKey: .params, context: context)
     }
 }
 

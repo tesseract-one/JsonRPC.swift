@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import ConfigurationCodable
 
 extension Formatter {
     public static let iso8601withFractionalSeconds: DateFormatter = {

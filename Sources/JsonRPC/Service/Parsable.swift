@@ -6,12 +6,12 @@
 //
 
 import Foundation
-import ConfigurationCodable
+import ContextCodable
 
 public protocol Parsable {
     func parse<T: Decodable>(to: T.Type) -> Result<T?, CodecError>
-    func parse<T: ConfigurationCodable.DecodableWithConfiguration>(
-        to: T.Type, configuration: T.DecodingConfiguration
+    func parse<T: ContextDecodable>(
+        to: T.Type, context: T.DecodingContext
     ) -> Result<T?, CodecError>
     // TODO: Add Foundation based parse call for Xcode 15+ and Swift 5.9+
 }
@@ -29,10 +29,10 @@ struct EnvelopedParsable: Parsable {
         decoder.tryDecode(NotificationEnvelope<T>.self, from: data).map {$0.params}
     }
     
-    func parse<T: ConfigurationCodable.DecodableWithConfiguration>(
-        to: T.Type, configuration: T.DecodingConfiguration
+    func parse<T: ContextDecodable>(
+        to: T.Type, context: T.DecodingContext
     ) -> Result<T?, CodecError> {
-        decoder.tryDecode(NotificationEnvelope<T>.self, from: data, configuration: configuration)
+        decoder.tryDecode(NotificationEnvelope<T>.self, from: data, context: context)
             .map { $0.params }
     }
 }
