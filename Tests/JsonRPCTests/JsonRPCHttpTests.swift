@@ -14,7 +14,7 @@ extension URL {
 }
 
 final class JsonRPCHttpTests: XCTestCase {
-    let queue = DispatchQueue.main
+    let queue = DispatchQueue.global(qos: .userInteractive)
     
     func testCall() {
         let http = JsonRpc(.http(url: .avaHttp), queue: queue)
@@ -38,27 +38,14 @@ final class JsonRPCHttpTests: XCTestCase {
         
         let service = JsonRpc(.http(url: .avaHttp), queue: queue)
         
-        let before = self.expectation(description: "before")
-        queue.async {
-            before.fulfill()
+        let responses = (0...times).map { n in
+            self.expectation(description: "response#" + String(n))
         }
-        
-        var responses:Array<XCTestExpectation> = []
-        
+  
         for n in 0...times {
             service.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
                 responses[n].fulfill()
             }
-        }
-        
-        let after = self.expectation(description: "after")
-        queue.async {
-            after.fulfill()
-        }
-        waitForExpectations(timeout: 1, handler: nil)
-        
-        for n in 0...times {
-            responses.append(self.expectation(description: "response#" + String(n)))
         }
         
         waitForExpectations(timeout: 20, handler: nil)

@@ -32,14 +32,18 @@ public final class ServiceCore<Connection, Delegate: AnyObject>: ServiceCoreProt
     public var debug: Bool
     public weak var delegate: Delegate?
     
-    var responseClosures = Dictionary<RPCID, ResponseClosure>()
+    var responseClosures: Synced<[RPCID: ResponseClosure]>!
     
-    init(connection: Connection, queue:DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) {
+    init(connection: Connection, queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) {
         self.connection = connection
         
         self.queue = queue
         
         self.rpcId = Synced(value: 0)
+
+        if connection is PersistentConnection {
+            self.responseClosures = Synced(value: [:])
+        }
         
         self.encoder = encoder
         self.decoder = decoder

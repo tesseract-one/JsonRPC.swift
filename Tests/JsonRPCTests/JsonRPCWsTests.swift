@@ -80,8 +80,8 @@ extension URL {
 
 #if !os(Linux) && !os(Windows)
 final class JsonRPCWsTests: XCTestCase {
-    let queue = DispatchQueue.main
-    let pool = DispatchQueue.global()
+    let queue = DispatchQueue.global(qos: .userInteractive)
+    let pool = DispatchQueue.global(qos: .userInitiated)
     
     func testCall() {
         let ws = JsonRpc(.ws(url: .avaWs), queue: queue)

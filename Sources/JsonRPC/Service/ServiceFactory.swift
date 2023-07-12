@@ -11,7 +11,7 @@ public protocol ServiceFactory: FactoryBase {
     associatedtype Delegate: AnyObject
     
     func core(
-        queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
+        queue: DispatchQueue, encoder: ContentEncoder, decoder: ContentDecoder
     ) -> ServiceCore<Connection, Delegate>
     
     func caller(service: ServiceCore<Connection, Delegate>) -> Callable
@@ -29,7 +29,7 @@ extension ServiceFactoryProvider: ServiceFactory {
     public typealias Connection = Factory.Connection
     public typealias Delegate = Factory.Delegate
     
-    public func core(queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder) -> ServiceCore<Factory.Connection, Factory.Delegate> {
+    public func core(queue: DispatchQueue, encoder: ContentEncoder, decoder: ContentDecoder) -> ServiceCore<Factory.Connection, Factory.Delegate> {
         factory.core(queue: queue, encoder: encoder, decoder: decoder)
     }
     
@@ -45,7 +45,7 @@ public protocol SingleShotServiceFactory: ServiceFactory
 
 extension SingleShotServiceFactory where Self: SingleShotConnectionFactory {
     public func core(
-        queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
+        queue: DispatchQueue, encoder: ContentEncoder, decoder: ContentDecoder
     ) -> ServiceCore<Connection, Delegate> {
         var headers = Dictionary<String, String>()
         
@@ -99,7 +99,7 @@ extension HttpConnectionFactory: SingleShotServiceFactory {}
 extension WsConnectionFactory: PersistentServiceFactory {}
 
 public func JsonRpc<Factory: ServiceFactory>(
-    factory: Factory, queue: DispatchQueue, encoder: ContentEncoder, decoder:ContentDecoder
+    factory: Factory, queue: DispatchQueue, encoder: ContentEncoder, decoder: ContentDecoder
 ) -> Service<ServiceCore<Factory.Connection, Factory.Delegate>> {
     let core = factory.core(queue: queue, encoder: encoder, decoder: decoder)
     let caller = factory.caller(service: core)
@@ -108,7 +108,7 @@ public func JsonRpc<Factory: ServiceFactory>(
 
 public func JsonRpc<Factory: ServiceFactory>(
     _ cfp: ServiceFactoryProvider<Factory>, queue: DispatchQueue,
-    encoder: ContentEncoder = JSONEncoder.rpc, decoder:ContentDecoder = JSONDecoder.rpc
+    encoder: ContentEncoder = JSONEncoder.rpc, decoder: ContentDecoder = JSONDecoder.rpc
 ) -> Service<ServiceCore<Factory.Connection, Factory.Delegate>> {
     JsonRpc(factory: cfp.factory, queue: queue, encoder: encoder, decoder: decoder)
 }

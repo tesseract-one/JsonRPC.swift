@@ -16,15 +16,16 @@ protocol ResponseClosuresRegistry {
 
 extension ServiceCore: ResponseClosuresRegistry where Connection: PersistentConnection {
     func register(id: RPCID, closure: @escaping ResponseClosure) {
-        queue.async {
-            self.responseClosures[id] = closure
+        responseClosures.sync { closures in
+            closures[id] = closure
         }
     }
     
     func remove(id: RPCID, result: @escaping (ResponseClosure?) -> Void) {
-        queue.async {
-            result(self.responseClosures.removeValue(forKey: id))
+        let closure = responseClosures.sync { closures in
+            closures.removeValue(forKey: id)
         }
+        result(closure)
     }
 }
 
@@ -129,14 +130,13 @@ extension ServiceCore where Connection: PersistentConnection, Delegate: AnyObjec
     
     func process(response: Data, id: RPCID, notFound: @escaping () -> Void) {
         if debug { print("Response[\(id)]: \(String(data: response, encoding: .utf8) ?? "<error>")") }
-        queue.async {
-            self.remove(id: id) { closure in
-                guard let closure = closure else {
-                    notFound()
-                    return
-                }
-                closure(response)
+        
+        self.remove(id: id) { closure in
+            guard let closure = closure else {
+                notFound()
+                return
             }
+            closure(response)
         }
     }
 }
