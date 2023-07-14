@@ -49,6 +49,7 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
         var task: Optional<URLSessionWebSocketTask> = nil
         var requests: [Data] = []
         var sending: Bool = false
+        var pingTimer: DispatchSourceTimer? = nil
     }
     
     private let url: URL
@@ -60,8 +61,6 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
     private let maximumMessageSize: Int?
     private var state: Compartment<State>
     private let syncQueue: DispatchQueue
-    // Can be not protected because used only in syncQueue
-    private var pingTimer: DispatchSourceTimer?
     
     public var sink: ConnectionSink
     public var connected: ConnectableState {
@@ -85,7 +84,6 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
         self.connectTimeout = connectTimeout
         self.pingInterval = pingInterval
         self.maximumMessageSize = maximumMessageSize
-        self.pingTimer = nil
         let delegate = URLSessionWebSocketDelegateProxyWrapper(wrapped: session.delegate,
                                                                delegateQueue: session.delegateQueue)
         self.syncQueue = DispatchQueue(
@@ -154,13 +152,13 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
                     didCloseWith closeCode: URLSessionWebSocketTask.CloseCode,
                     reason: Data?) {
         state.unprotectedValue.connected = .disconnected
-        stopPing()
+        stopPing(state: &state.unprotectedValue)
         flush(state: .disconnected)
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         state.unprotectedValue.connected = .disconnected
-        stopPing()
+        stopPing(state: &state.unprotectedValue)
         if let error = error {
             flush(error: .network(cause: error))
         }
@@ -228,12 +226,13 @@ public class WsConnection: PersistentConnection, Connectable, URLSessionWebSocke
             }
         }
         timer.activate()
+        state.pingTimer = timer
     }
     
     // Method should be called into State queue
-    private func stopPing() {
-        guard let timer = self.pingTimer else { return }
-        self.pingTimer = nil
+    private func stopPing(state: inout State) {
+        guard let timer = state.pingTimer else { return }
+        state.pingTimer = nil
         timer.cancel()
     }
     
