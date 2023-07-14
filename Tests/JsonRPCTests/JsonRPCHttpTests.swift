@@ -14,7 +14,7 @@ extension URL {
 }
 
 final class JsonRPCHttpTests: XCTestCase {
-    let queue = DispatchQueue.global(qos: .userInteractive)
+    let queue = DispatchQueue.main
     
     func testCall() {
         let http = JsonRpc(.http(url: .avaHttp), queue: queue)

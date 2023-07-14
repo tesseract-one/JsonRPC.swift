@@ -80,7 +80,7 @@ extension URL {
 
 #if !os(Linux) && !os(Windows)
 final class JsonRPCWsTests: XCTestCase {
-    let queue = DispatchQueue.global(qos: .userInteractive)
+    let queue = DispatchQueue.main
     let pool = DispatchQueue.global(qos: .userInitiated)
     
     func testCall() {
