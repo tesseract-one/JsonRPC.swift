@@ -25,6 +25,7 @@ Pod::Spec.new do |s|
   s.source_files = 'Sources/JsonRPC/**/*.swift'
   
   s.dependency 'ContextCodable.swift', '~> 0.1.0'
+  s.dependency 'Tuples', '~> 0.1.0'
   
   s.test_spec 'Tests' do |test_spec|
     test_spec.platforms = {:ios => '13.0', :osx => '10.15', :tvos => '13.0'}

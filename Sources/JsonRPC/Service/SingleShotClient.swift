@@ -34,7 +34,13 @@ public extension ServiceCore where Connection: SingleShotConnection {
                     }
                 }
             
-            if debug { print("Response[\(id)]: \(data.map { String(data: $0, encoding: .utf8) })") }
+            if debug {
+                switch data {
+                case .success(let data):
+                    print("Response[\(id)]: \(String(data: data, encoding: .utf8) ?? "<error>")")
+                case .failure(let err): print("Response[\(id)]: error: \(err)")
+                }
+            }
             
             let response = data.flatMap(deserializer)
             self.queue.async { callback(response) }

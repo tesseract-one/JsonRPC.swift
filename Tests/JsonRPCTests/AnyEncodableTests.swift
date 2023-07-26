@@ -19,7 +19,7 @@ final class AnyEncodableTests: XCTestCase {
     
     func testData() {
         let data = Data(repeating: 1, count: 32)
-        let encoded = try? encoder.encode(Params(data))
+        let encoded = try? encoder.encode([AnyEncodable(data)])
         XCTAssertNotNil(encoded)
         let string = String(data: encoded!, encoding: .utf8)!
         XCTAssertEqual(string, "[\"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=\"]")
