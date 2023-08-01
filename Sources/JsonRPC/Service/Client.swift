@@ -8,13 +8,6 @@
 import Foundation
 import ContextCodable
 
-public enum RequestError<Params, Error>: Swift.Error {
-    case service(error: ServiceError)
-    case empty //empty body has been returned in reply
-    case reply(method: String, params: Params, error: ResponseError<Error>)
-    case custom(description: String, cause: Swift.Error?)
-}
-
 public typealias RequestCallback<Params, Response, Error> = Callback<Response, RequestError<Params, Error>>
 
 public protocol Callable {
@@ -50,6 +43,28 @@ public protocol Callable {
 
 public protocol Client: Callable {
     var debug: Bool { get set }
+}
+
+public protocol AsAnyRequestError {
+    var anyRequestError: RequestError<Any, Any> { get }
+}
+
+public enum RequestError<Params, Error>: Swift.Error, AsAnyRequestError {
+    case service(error: ServiceError)
+    case empty //empty body has been returned in reply
+    case reply(method: String, params: Params, error: ResponseError<Error>)
+    case custom(description: String, cause: Swift.Error?)
+    
+    public var anyRequestError: RequestError<Any, Any> {
+        switch self {
+        case .service(error: let err): return .service(error: err)
+        case .empty: return .empty
+        case .reply(method: let m, params: let p, error: let e):
+            return .reply(method: m, params: p, error: e.anyResponseError)
+        case .custom(description: let d, cause: let e):
+            return .custom(description: d, cause: e)
+        }
+    }
 }
 
 #if swift(>=5.5)

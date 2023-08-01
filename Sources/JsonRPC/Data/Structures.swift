@@ -47,10 +47,18 @@ extension RequestEnvelope: Foundation.EncodableWithConfiguration
 }
 #endif
 
-public struct ResponseError<T>: Error {
+public protocol AsAnyResponseError {
+    var anyResponseError: ResponseError<Any> { get }
+}
+
+public struct ResponseError<T>: Error, AsAnyResponseError {
     public let code: Int
     public let message: String
     public let data: T?
+    
+    public var anyResponseError: ResponseError<Any> {
+        ResponseError<_>(code: code, message: message, data: data)
+    }
 }
 
 extension ResponseError: Decodable where T: Decodable {}
