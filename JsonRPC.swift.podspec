@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'JsonRPC.swift'
-  s.version          = '0.2.1'
+  s.version          = '0.2.2'
   s.summary          = 'Cross-plaform Json RPC library for Swift with WebSocket support'
 
   s.description      = <<-DESC
