@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'JsonRPC.swift'
-  s.version          = '0.2.2'
+  s.version          = '999.99.9'
   s.summary          = 'Cross-plaform Json RPC library for Swift with WebSocket support'
 
   s.description      = <<-DESC
@@ -13,23 +13,20 @@ Pod::Spec.new do |s|
   s.author           = { 'Tesseract Systems, Inc.' => 'info@tesseract.one' }
   s.source           = { :git => 'https://github.com/tesseract-one/JsonRPC.swift.git', :tag => s.version.to_s }
 
-  s.ios.deployment_target = '13.0'
-  s.osx.deployment_target = '10.15'
-  s.tvos.deployment_target = '13.0'
-  s.watchos.deployment_target = '6.0'
-  
-  s.swift_version = '5.4'
+  s.swift_version    = '5.4'
+  s.module_name      = 'JsonRPC'
 
-  s.module_name = 'JsonRPC'
+  base_platforms     = { :ios => '13.0', :osx => '10.15', :tvos => '13.0' }
+  s.platforms        = base_platforms.merge({ :watchos => '6.0' })
   
-  s.source_files = 'Sources/JsonRPC/**/*.swift'
+  s.source_files     = 'Sources/JsonRPC/**/*.swift'
   
   s.dependency 'ContextCodable.swift', '~> 0.1.0'
   s.dependency 'Tuples', '~> 0.1.0'
   
-  s.test_spec 'Tests' do |test_spec|
-    test_spec.platforms = {:ios => '13.0', :osx => '10.15', :tvos => '13.0'}
-    test_spec.source_files = 'Tests/JsonRPCTests/*.swift'
-    test_spec.dependency 'Serializable.swift', '~> 0.2.3'
+  s.test_spec 'Tests' do |ts|
+    ts.platforms = base_platforms
+    ts.source_files = 'Tests/JsonRPCTests/*.swift'
+    ts.dependency 'Serializable.swift', '~> 0.2.3'
   end
 end
