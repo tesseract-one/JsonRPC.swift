@@ -11,7 +11,7 @@ import Serializable
 
 struct NewHeadsNotification: Decodable {
     let subscription: String
-    let result: SerializableValue
+    let result: AnyValue
 }
 
 public class TestDelegate: ConnectableDelegate, NotificationDelegate, ErrorDelegate {
@@ -90,7 +90,7 @@ final class JsonRPCWsTests: XCTestCase {
         
         var resWs: String = "ws"
         
-        ws.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
+        ws.call(method: "web3_clientVersion", params: Params(), String.self, AnyValue.self) { res in
             resWs = try! res.get()
             
             wsExp.fulfill()
@@ -122,7 +122,7 @@ final class JsonRPCWsTests: XCTestCase {
         service.connect()
         XCTAssertEqual(service.connected, .connecting)
 
-        service.call(method: "eth_subscribe", params: ["newHeads"], String.self, SerializableValue.self) { res in
+        service.call(method: "eth_subscribe", params: ["newHeads"], String.self, AnyValue.self) { res in
             switch res {
             case .success(let id):
                 delegate.id = id
@@ -160,7 +160,7 @@ final class JsonRPCWsTests: XCTestCase {
         var responses:Array<XCTestExpectation> = []
         
         for n in 0...times {
-            service.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
+            service.call(method: "web3_clientVersion", params: Params(), String.self, AnyValue.self) { res in
                 responses[n].fulfill()
             }
         }

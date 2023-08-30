@@ -22,7 +22,7 @@ final class JsonRPCHttpTests: XCTestCase {
         
         var resHttp: String = "http"
         
-        http.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
+        http.call(method: "web3_clientVersion", params: Params(), String.self, AnyValue.self) { res in
             resHttp = try! res.get()
             
             httpExp.fulfill()
@@ -43,7 +43,7 @@ final class JsonRPCHttpTests: XCTestCase {
         }
   
         for n in 0...times {
-            service.call(method: "web3_clientVersion", params: Params(), String.self, SerializableValue.self) { res in
+            service.call(method: "web3_clientVersion", params: Params(), String.self, AnyValue.self) { res in
                 responses[n].fulfill()
             }
         }
